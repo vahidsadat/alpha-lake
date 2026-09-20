@@ -1,0 +1,21 @@
+[project]
+name = "alphalake"
+dynamic = ["version"]
+authors = [{name = "vahid sadat", email = "sadatvahid1372@gmail.com"}]
+requires-python = ">= 3.8"
+dependencies = [
+    "edgartools",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+    "pytest>=8.0.0",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
