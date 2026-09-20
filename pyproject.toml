@@ -2,10 +2,13 @@
 name = "alphalake"
 dynamic = ["version"]
 authors = [{name = "vahid sadat", email = "sadatvahid1372@gmail.com"}]
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 dependencies = [
     "edgartools",
     "python-dotenv",
+    "requests",
+    "pyspark",
+    "pandas"
 ]
 
 [dependency-groups]

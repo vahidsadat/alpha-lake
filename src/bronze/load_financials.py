@@ -1,14 +1,14 @@
-from edgar import Company, set_identity
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-set_identity(f"{os.getenv('name')} {os.getenv('email')}")
+from pathlib import Path
+import json
+from src.ingestion.sec.sec_client import get_company_facts
 
 
-company = Company("MSFT")
-financials = company.get_financials()
-income_statement = financials.income_statement()
+def save_company_facts(ticker: str, data:dict):
+    path = Path(f"data/bronze/sec/{ticker.upper()}/companyfacts.json")
 
-print (income_statement)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data,f, indent=2)
+
+ticker = "MSFT"
+save_company_facts(ticker,get_company_facts(ticker))

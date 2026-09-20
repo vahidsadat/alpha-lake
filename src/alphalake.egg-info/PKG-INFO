@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: alphalake
+Version: 0.0.0
+Author-email: vahid sadat <sadatvahid1372@gmail.com>
+Requires-Python: >=3.10
+Requires-Dist: edgartools
+Requires-Dist: python-dotenv
+Requires-Dist: requests
+Requires-Dist: pyspark
+Requires-Dist: pandas
