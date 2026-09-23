@@ -5,7 +5,7 @@ spark = SparkSession.builder.appName(
     name="AlphaLake"
 ).getOrCreate()
 
-def read_json(ticker:str):
+def transform_sec_facts(ticker:str):
     path = Path(f"data/bronze/sec/{ticker.upper()}/companyfacts.json")
 
     raw_df = spark.read.text(
@@ -31,6 +31,4 @@ def read_json(ticker:str):
         F.variant_get(F.col("observations_attr.value"),"$.fy","bigint").alias("fiscal_year"),
         F.variant_get(F.col("observations_attr.value"),"$.val","decimal(38,10)").alias("value")
         )
-    fields_df.printSchema()
-    fields_df.show(5, truncate=False)
-read_json("MSFT")
+    return fields_df

@@ -10,5 +10,5 @@ def save_company_facts(ticker: str, data:dict):
     with open(path, "w") as f:
         json.dump(data,f, indent=2)
 
-ticker = "MSFT"
+ticker = "AAPL"
 save_company_facts(ticker,get_company_facts(ticker))
