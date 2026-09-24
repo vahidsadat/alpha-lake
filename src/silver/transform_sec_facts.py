@@ -5,9 +5,7 @@ spark = SparkSession.builder.appName(
     name="AlphaLake"
 ).getOrCreate()
 
-def transform_sec_facts(ticker:str):
-    path = Path(f"data/bronze/sec/{ticker.upper()}/companyfacts.json")
-
+def transform_sec_facts(path: Path,ticker:str):
     raw_df = spark.read.text(
         str(path),
         wholetext=True)
