@@ -1,8 +1,6 @@
-import json
 from pathlib import Path
-from pyspark.sql import SparkSession, functions as F
+from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.window import Window
-from silver.transform_sec_facts import transform_sec_facts
 
 
 
@@ -19,8 +17,8 @@ def desire_ticker(ticker:str):
     ticker_df = df.filter(df.ticker == ticker)
     return ticker_df
 
-def annual_duration_metrics_report(ticker:str,metric:str, output_name:str):
-    df = desire_ticker(ticker)
+def annual_duration_metrics_report(metric:str, output_name:str, df:DataFrame):
+    
     report_df = df.filter(df.concept == metric)
     duration_diff = F.date_diff(F.col("period_end_date"), F.col("period_start_date"))
     report_df = report_df.withColumn("duration_diff", duration_diff)
@@ -36,9 +34,26 @@ def annual_duration_metrics_report(ticker:str,metric:str, output_name:str):
     final_report_df = annual_report_df.select(
         F.col("ticker"),
         F.col("period_end_date").alias("period_date"),
-        F.col("value").alias(output_name),
+        F.col("value").alias(output_name)
+        
     )
     return final_report_df
 
-annual_duration_metrics_report("AAPL","NetCashProvidedByUsedInOperatingActivities","operating_cash_flow").show(20, truncate=False)
+def canonical_metric(df:DataFrame,output_name:str,preferred_metric:str,fallback_metric:str):
+    preferred_df = annual_duration_metrics_report(preferred_metric,output_name, df).withColumn(f"{output_name}_source", F.lit(preferred_metric))
+    fallback_df = annual_duration_metrics_report(fallback_metric,output_name, df).withColumn( f"{output_name}_source", F.lit(fallback_metric))
+    missing_fallback_df = fallback_df.join(
+        preferred_df.select("ticker", "period_date"), ["ticker", "period_date"], "left_anti")
+    final_df = preferred_df.unionByName(missing_fallback_df).orderBy("period_date")
+    return final_df
 
+
+def annual_cash_flow_metrics(ticker:str) -> DataFrame:
+    df = desire_ticker(ticker)
+    capex_df = canonical_metric(df,"capex", "PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets")
+    operating_cf_df = canonical_metric(df,"operating_cash_flow", "NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations")
+    free_cash_flow_df = operating_cf_df.join(capex_df, ["ticker", "period_date"], "left").withColumn("free_cash_flow", F.col("operating_cash_flow") - F.col("capex")).orderBy("period_date")
+    return free_cash_flow_df
+
+
+annual_cash_flow_metrics("AAPL").show(20, truncate=False)
