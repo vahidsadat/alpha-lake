@@ -54,6 +54,8 @@ def annual_instance_metrics_report(ticker:str,metric:str, output_name:str):
         F.col("value").alias(output_name),
     )
     return final_report_df
+
+
 def annual_net_income_revenue(ticker:str):
     revenue_1_df = annual_duration_metrics_report(ticker, "RevenueFromContractWithCustomerExcludingAssessedTax", "revenue")
     revenue_2_df = annual_duration_metrics_report(ticker, "SalesRevenueNet", "revenue")
@@ -66,5 +68,16 @@ def annual_net_income_revenue(ticker:str):
     combined_df = combined_duration_df.join(asset_df, ["ticker", "period_date"], "left").join(equity_df, ["ticker", "period_date"], "left")
     return combined_df
 
-
-annual_net_income_revenue("AAPL").show(20, truncate=False)
+def annual_derived_metrics(ticker:str):
+    combined_df = annual_net_income_revenue(ticker)
+    window = Window.partitionBy("ticker").orderBy(F.col("period_date"))
+    combined_df = combined_df.withColumn("previous_assets", F.lag("assets").over(window))
+    combined_df = combined_df.withColumn("average_assets", (F.col("assets") + F.col("previous_assets")) / 2)
+    combined_df = combined_df.withColumn("previous_equity", F.lag("equity").over(window))
+    combined_df = combined_df.withColumn("average_equity", (F.col("equity") + F.col("previous_equity")) / 2)
+    combined_df = combined_df.withColumn("operating_margin", F.col("operating_income") / F.col("revenue"))
+    combined_df = combined_df.withColumn("net_profit_margin", F.col("net_income") / F.col("revenue"))
+    combined_df = combined_df.withColumn("return_on_assets", F.col("net_income") / F.col("average_assets"))
+    combined_df = combined_df.withColumn("return_on_equity", F.col("net_income") / F.col("average_equity"))
+    return combined_df.drop("previous_assets", "previous_equity", "average_assets", "average_equity").orderBy(F.col("ticker"), F.col("period_date"))
+annual_derived_metrics("AAPL").show(20, truncate=False)
