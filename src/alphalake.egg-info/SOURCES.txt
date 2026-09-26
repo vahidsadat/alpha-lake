@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/__init__.py
+src/pipeline.py
 src/alphalake.egg-info/PKG-INFO
 src/alphalake.egg-info/SOURCES.txt
 src/alphalake.egg-info/dependency_links.txt
@@ -9,14 +10,15 @@ src/alphalake.egg-info/top_level.txt
 src/bronze/__init__.py
 src/bronze/load_financials.py
 src/gold/__init__.py
+src/gold/cash_flow_metrics.py
+src/gold/cash_flow_quality_metrics.py
 src/gold/company_fundamentals.py
+src/gold/growth_metrics.py
+src/gold/rolling_metrics.py
 src/ingestion/sec/__init__.py
 src/ingestion/sec/sec_client.py
 src/ingestion/sec/ticker_cik.py
 src/silver/__init__.py
-src/silver/balance_sheet.py
-src/silver/cashflow.py
-src/silver/income_statement.py
 src/silver/transform_sec_facts.py
 src/silver/write_financial_facts.py
 tests/test_transform_sec_facts.py

@@ -9,6 +9,12 @@ def save_company_facts(ticker: str, data:dict):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(data,f, indent=2)
+def load_financials(tickers : list[str]):
+    for ticker in tickers:
+        try:
+            df = get_company_facts(ticker)
+            save_company_facts(ticker,df)
+        except:
+            continue
 
-ticker = "AAPL"
-save_company_facts(ticker,get_company_facts(ticker))
+load_financials(["AAPL", "MSFT"])
