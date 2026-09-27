@@ -17,4 +17,4 @@ def run_pipeline(tickers: list[str]):
     rolling_metrics.write_rolling_metrics(company_df)
 
 
-run_pipeline(["AAPL","MSFT"])
+run_pipeline(["AAPL","MSFT", "NVDA"])
