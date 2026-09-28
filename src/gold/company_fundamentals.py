@@ -105,8 +105,8 @@ def write_company_financials(df: DataFrame):
     #     "dynamic"
     # )
     final_report_df\
-        .option("partitionOverwriteMode","dynamic")\
         .write.partitionBy("ticker")\
+        .option("partitionOverwriteMode","dynamic")\
         .mode("overwrite")\
         .parquet(str(path))
 
