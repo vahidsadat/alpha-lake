@@ -99,7 +99,7 @@ def write_company_financials(df: DataFrame):
     cash_flow_df = annual_cash_flow_metrics(df)
     final_report_df = derived_report_df.join(cash_flow_df, ["ticker", "period_date"], "left")
     path.parent.mkdir(parents=True, exist_ok=True)
-    spark = final_report_df.sparkSession
+    # spark = final_report_df.sparkSession
     # spark.conf.set(
     #     "spark.sql.sources.partitionOverwriteMode",
     #     "dynamic"
