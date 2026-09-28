@@ -7,7 +7,7 @@ import json
 
 # Bronze: writing fact in data folder in databricks
 def save_company_facts_into_databricks(ticker: str, data:dict):
-    path = Path(f"Volumes/alphalake/raw/data/bronze/sec/{ticker.upper()}/companyfacts.json")
+    path = Path(f"/Volumes/alphalake/raw/data/bronze/sec/{ticker.upper()}/companyfacts.json")
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
@@ -16,17 +16,32 @@ def save_company_facts_into_databricks(ticker: str, data:dict):
 
 # Silver: write the financial facts into Databricks
 def write_financial_facts(ticker:str):
-    path = Path(f"Volumes/alphalake/raw/data/bronze/sec/{ticker}/companyfacts.json")
-    silver_path = Path("data/silver/sec/financial_facts")
+    path = Path(f"/Volumes/alphalake/raw/data/bronze/sec/{ticker}/companyfacts.json")
+    table_name = "alphalake.silver.financial_facts"
     data_path = path
     df = transform_sec_facts(data_path, ticker)
-    silver_path.parent.mkdir(parents=True, exist_ok=True)
     spark = df.sparkSession
-    spark.conf.set(
-            "spark.sql.sources.partitionOverwriteMode",
-            "dynamic"
+    spark.sql(
+        "CREATE SCHEMA IF NOT EXISTS alphalake.silver"
+    )
+    if not spark.catalog.tableExists(table_name):
+        (
+            df.writeTo(table_name)
+            .using("delta")
+            .partitionedBy("ticker")
+            .create()
         )
-    df.write.partitionBy("ticker").mode("overwrite").parquet(str(silver_path))
+    else:
+        (
+            df.write
+            .format("delta")
+            .mode("overwrite")
+            .option(
+                "replaceWhere",
+                f"ticker = '{ticker}'"
+            )
+            .saveAsTable(table_name)
+        )
 
 def write_multi_financial_facts(tickers: list[str]):
     for ticker in tickers:
@@ -35,8 +50,7 @@ def write_multi_financial_facts(tickers: list[str]):
         except:
             continue
 def write_company_financials(df, table_name = "alphalake.gold.company_financials"):
-    spark = df.SparkSession
-    table_name = "alphalake.gold.company_financials"
+    spark = df.sparkSession
     spark.sql("CREATE NAMESPACE IF NOT EXISTS alphalake.gold")
     if not spark.catalog.tableExists(table_name):
         df.writeTo(table_name).using("delta").create()
@@ -83,13 +97,6 @@ def write_company_financials(df, table_name = "alphalake.gold.company_financials
             """)
         else:
             print("no changes detected")
-    spark.sql("""
-        SELECT
-            committed_at,
-            snapshot_id,
-            parent_id,
-            operation,
-            summary
-        FROM alphalake.gold.company_financials.snapshots
-        ORDER BY committed_at
-    """).show(100,truncate=False)
+        spark.sql(
+                f"DESCRIBE HISTORY {table_name}"
+            ).show(truncate=False)

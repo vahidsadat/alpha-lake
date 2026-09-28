@@ -2,6 +2,7 @@ from bronze.load_financials import load_financials
 from silver.write_financial_facts import write_multi_financial_facts
 from gold import company_fundamentals,cash_flow_quality_metrics, growth_metrics,rolling_metrics
 from infrastructure.storage.local import write_company_financials
+from infrastructure.storage import databricks
 
 
 def run_pipeline(tickers: list[str]):
@@ -9,7 +10,7 @@ def run_pipeline(tickers: list[str]):
     write_multi_financial_facts(tickers)
 
     silver_df = company_fundamentals.read_from_parquet()
-    write_company_financials(silver_df)
+    databricks.write_company_financials(silver_df)
 
     company_df = growth_metrics.read_from_parquet()
 

@@ -13,7 +13,7 @@ def load_financials(tickers : list[str]):
             if (destination == "local"):
                 save_company_facts(ticker,df)
             elif (destination == 'databricks'):
-                save_company_facts_into_databricks
+                save_company_facts_into_databricks(ticker,df)
             else:
                 ValueError("No destination has been chosen")
         except:
