@@ -1,9 +1,39 @@
 from src.gold.company_fundamentals import annual_derived_metrics, annual_cash_flow_metrics
+from src.silver.transform_sec_facts import transform_sec_facts
 from pyspark.sql import SparkSession
 from pathlib import Path
 from pyspark.sql import DataFrame
+import json
+
+# Bronze: writing fact in data folder in databricks
+def save_company_facts_into_databricks(ticker: str, data:dict):
+    path = Path(f"Volumes/alphalake/raw/data/bronze/sec/{ticker.upper()}/companyfacts.json")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data,f, indent=2)
 
 
+# Silver: write the financial facts into Databricks
+def write_financial_facts(ticker:str):
+    path = Path(f"Volumes/alphalake/raw/data/bronze/sec/{ticker}/companyfacts.json")
+    silver_path = Path("data/silver/sec/financial_facts")
+    data_path = path
+    df = transform_sec_facts(data_path, ticker)
+    silver_path.parent.mkdir(parents=True, exist_ok=True)
+    spark = df.sparkSession
+    spark.conf.set(
+            "spark.sql.sources.partitionOverwriteMode",
+            "dynamic"
+        )
+    df.write.partitionBy("ticker").mode("overwrite").parquet(str(silver_path))
+
+def write_multi_financial_facts(tickers: list[str]):
+    for ticker in tickers:
+        try:
+            write_financial_facts(ticker)
+        except:
+            continue
 def write_company_financials(df, table_name = "alphalake.gold.company_financials"):
     spark = df.SparkSession
     table_name = "alphalake.gold.company_financials"

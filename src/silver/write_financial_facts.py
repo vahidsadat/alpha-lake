@@ -3,11 +3,12 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 
 
-def get_bronze_path(ticker: str):
-    return Path(f"data/bronze/sec/{ticker}/companyfacts.json")
+
+# Silver: write the financial facts into local storage
 def write_financial_facts(ticker:str):
+    path = Path(f"data/bronze/sec/{ticker}/companyfacts.json")
     silver_path = Path("data/silver/sec/financial_facts")
-    data_path = get_bronze_path(ticker)
+    data_path = path
     df = transform_sec_facts(data_path, ticker)
     silver_path.parent.mkdir(parents=True, exist_ok=True)
     spark = df.sparkSession

@@ -1,6 +1,16 @@
 from src.gold.company_fundamentals import annual_derived_metrics, annual_cash_flow_metrics
 from pathlib import Path
 from pyspark.sql import DataFrame
+import json
+
+
+# Bronze: writing fact in data folder in local
+def save_company_facts(ticker: str, data:dict):
+    path = Path(f"data/bronze/sec/{ticker.upper()}/companyfacts.json")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data,f, indent=2)
 
 
 def write_company_financials(df: DataFrame):
