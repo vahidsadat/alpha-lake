@@ -100,11 +100,15 @@ def write_company_financials(df: DataFrame):
     final_report_df = derived_report_df.join(cash_flow_df, ["ticker", "period_date"], "left")
     path.parent.mkdir(parents=True, exist_ok=True)
     spark = final_report_df.sparkSession
-    spark.conf.set(
-        "spark.sql.sources.partitionOverwriteMode",
-        "dynamic"
-    )
-    final_report_df.write.partitionBy("ticker").mode("overwrite").parquet(str(path))
+    # spark.conf.set(
+    #     "spark.sql.sources.partitionOverwriteMode",
+    #     "dynamic"
+    # )
+    final_report_df\
+        .option("partitionOverwriteMode","dynamic")\
+        .write.partitionBy("ticker")\
+        .mode("overwrite")\
+        .parquet(str(path))
 
 
 df = read_from_parquet()
