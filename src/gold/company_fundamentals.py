@@ -93,23 +93,23 @@ def annual_derived_metrics(df:DataFrame):
     return combined_df.drop("previous_assets", "previous_equity", "average_assets", "average_equity").orderBy(F.col("ticker"), F.col("period_date"))
 
 
-def write_company_financials(df: DataFrame):
-    path = Path("data/gold/sec/company_financials")
-    derived_report_df = annual_derived_metrics(df)
-    cash_flow_df = annual_cash_flow_metrics(df)
-    final_report_df = derived_report_df.join(cash_flow_df, ["ticker", "period_date"], "left")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # spark = final_report_df.sparkSession
-    # spark.conf.set(
-    #     "spark.sql.sources.partitionOverwriteMode",
-    #     "dynamic"
-    # )
-    final_report_df\
-        .write.partitionBy("ticker")\
-        .option("partitionOverwriteMode","dynamic")\
-        .mode("overwrite")\
-        .parquet(str(path))
+# def write_company_financials(df: DataFrame):
+#     path = Path("data/gold/sec/company_financials")
+#     derived_report_df = annual_derived_metrics(df)
+#     cash_flow_df = annual_cash_flow_metrics(df)
+#     final_report_df = derived_report_df.join(cash_flow_df, ["ticker", "period_date"], "left")
+#     path.parent.mkdir(parents=True, exist_ok=True)
+#     # spark = final_report_df.sparkSession
+#     # spark.conf.set(
+#     #     "spark.sql.sources.partitionOverwriteMode",
+#     #     "dynamic"
+#     # )
+#     final_report_df\
+#         .write.partitionBy("ticker")\
+#         .option("partitionOverwriteMode","dynamic")\
+#         .mode("overwrite")\
+#         .parquet(str(path))
 
 
-df = read_from_parquet()
-write_company_financials(df)
+# df = read_from_parquet()
+# write_company_financials(df)
