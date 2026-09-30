@@ -45,10 +45,7 @@ def write_financial_facts(ticker:str):
 
 def write_multi_financial_facts(tickers: list[str]):
     for ticker in tickers:
-        try:
-            write_financial_facts(ticker)
-        except:
-            continue
+        write_financial_facts(ticker)
 def write_company_financials(df, table_name = "alphalake.gold.company_financials"):
     spark = df.sparkSession
     spark.sql("CREATE NAMESPACE IF NOT EXISTS alphalake.gold")
@@ -85,7 +82,7 @@ def write_company_financials(df, table_name = "alphalake.gold.company_financials
         ).select("source.*")
         if not(changed_df.isEmpty()):
             changed_df.createOrReplaceTempView("incoming_company_financials")
-            spark.sql("""MERGE INTO alphalake.gold.company_financials AS target
+            spark.sql(f"""MERGE INTO {table_name} AS target
             USING incoming_company_financials AS source
             ON target.ticker = source.ticker
             AND target.period_date = source.period_date
