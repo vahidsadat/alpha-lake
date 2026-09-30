@@ -8,15 +8,12 @@ from src.infrastructure.storage.databricks import save_company_facts_into_databr
 destination = os.getenv("ALPHALAKE_ENV", "local")
 def load_financials(tickers : list[str]):
     for ticker in tickers:
-        try:
-            df = get_company_facts(ticker)
-            if (destination == "local"):
-                save_company_facts(ticker,df)
-            elif (destination == 'databricks'):
-                save_company_facts_into_databricks(ticker,df)
-            else:
-                ValueError("No destination has been chosen")
-        except:
-            continue
+        df = get_company_facts(ticker)
+        if (destination == "local"):
+            save_company_facts(ticker,df)
+        elif (destination == 'databricks'):
+            save_company_facts_into_databricks(ticker,df)
+        else:
+            ValueError("No destination has been chosen")
 
 load_financials(["AAPL", "MSFT"])
