@@ -5,8 +5,9 @@ from src.infrastructure.storage.local import save_company_facts
 from src.infrastructure.storage.databricks import save_company_facts_into_databricks
 
 
-destination = os.getenv("ALPHALAKE_ENV", "local")
+
 def load_financials(tickers : list[str]):
+    destination = os.getenv("ALPHALAKE_ENV", "local")
     for ticker in tickers:
         df = get_company_facts(ticker)
         if (destination == "local"):
