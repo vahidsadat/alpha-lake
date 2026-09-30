@@ -7,6 +7,9 @@ from src.infrastructure.storage.databricks import save_company_facts_into_databr
 
 
 def load_financials(tickers : list[str]):
+    os.environ.setdefault("ALPHALAKE_ENV", "databricks")
+    os.environ.setdefault("name", "Sadat Vahid")
+    os.environ.setdefault("email", "sadatvahid1372@gmail.com")
     destination = os.getenv("ALPHALAKE_ENV", "local")
     for ticker in tickers:
         df = get_company_facts(ticker)
