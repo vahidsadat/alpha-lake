@@ -1,3 +1,6 @@
+locals {
+  repo_base_path = "/Workspace${data.databricks_current_user.me.home}/alpha-lake"
+}
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
   git_source {
@@ -57,8 +60,7 @@ resource "databricks_job" "alphalake" {
       task_key = "02_silver_transform"
     }
     notebook_task {
-      notebook_path = "AlphaLakeFinancialPipeline"
-      source        = "GIT"
+      notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
     }
   }
 
