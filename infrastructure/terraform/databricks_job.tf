@@ -1,5 +1,5 @@
 locals {
-  repo_base_path = "Workspace${data.databricks_current_user.me.home}/alpha-lake"
+  repo_base_path = "/Workspace${data.databricks_current_user.me.home}/alpha-lake"
 }
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
@@ -61,6 +61,7 @@ resource "databricks_job" "alphalake" {
     }
     notebook_task {
       notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
+      source        = "WORKSPACE"
     }
   }
 
