@@ -3,5 +3,5 @@ output "job_url" {
 }
 
 output "job_id" {
-  value = databricks_job.alphalake.job_id
+  value = databricks_job.alphalake.id
 }

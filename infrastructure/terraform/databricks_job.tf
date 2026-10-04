@@ -48,7 +48,7 @@ resource "databricks_job" "alphalake" {
     }
 
     task {
-      task_key = "03_pipeline"
+      task_key = "03_gold_transform"
       depends_on {
         task_key = "02_silver_transform"
       }
