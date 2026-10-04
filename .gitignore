@@ -11,3 +11,4 @@ data/gold/
 *.tfstate
 *.tfstate.*
 terraform.tfvars
+Databricks credentials/tokens
