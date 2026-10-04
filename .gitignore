@@ -7,3 +7,7 @@ warehouse/
 data/bronze/
 data/silver/
 data/gold/
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
