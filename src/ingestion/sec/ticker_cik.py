@@ -16,11 +16,11 @@ def get_company_tickers(name:str,email:str):
     data = response.json()
     return(data)
 
-def get_CIK(ticker:str):
+def get_CIK(ticker:str,name:str,email:str):
 
     ticker = ticker.upper()
 
-    for company in get_company_tickers().values():
+    for company in get_company_tickers(name,email).values():
         if ticker == company["ticker"].upper():
             return str(company["cik_str"]).zfill(10)
 
