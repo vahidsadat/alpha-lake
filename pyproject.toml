@@ -8,7 +8,8 @@ dependencies = [
     "python-dotenv",
     "requests",
     "pyspark==4.1.3",
-    "pandas"
+    "pandas",
+    "databricks-sdk"
 ]
 
 [dependency-groups]

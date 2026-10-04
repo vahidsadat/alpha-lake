@@ -27,7 +27,7 @@ resource "databricks_job" "alphalake" {
       task_key = "01_bronze_ingestion"
 
       notebook_task {
-        notebook_path = "${locals.repo_base_path}/src/bronze/load_financials"
+        notebook_path = "${local.repo_base_path}/src/bronze/load_financials"
 
         base_parameters = {
           name          = var.name
@@ -43,7 +43,7 @@ resource "databricks_job" "alphalake" {
         task_key = "01_bronze_ingestion"
       }
       notebook_task {
-        notebook_path = "${locals.repo_base_path}/src/infrastructure/storage/databricks"
+        notebook_path = "${local.repo_base_path}/src/infrastructure/storage/databricks"
       }
     }
 
@@ -53,17 +53,8 @@ resource "databricks_job" "alphalake" {
         task_key = "02_silver_transform"
       }
       notebook_task {
-        notebook_path = "${locals.repo_base_path}"
+        notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
       }
     }
-  
 
-}
-
-output "notebook_url" {
-  value = databricks_notebook.this.url
-}
-
-output "job_url" {
-  value = databricks_job.this.url
 }
