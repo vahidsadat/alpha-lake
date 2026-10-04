@@ -5,10 +5,10 @@ load_dotenv()
 
 api_url = "https://www.sec.gov/files/company_tickers.json"
 
-def get_company_tickers():
+def get_company_tickers(name:str,email:str):
 
     headers = {
-    "User-Agent": f"{os.getenv('name')} {os.getenv('email')}",
+    "User-Agent": f"{name} {email}",
     "Accept-Encoding": "gzip, deflate"
     }
 

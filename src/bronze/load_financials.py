@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 import os
 from src.ingestion.sec.sec_client import get_company_facts
@@ -7,17 +8,7 @@ from databricks.sdk import WorkspaceClient
 
 
 
-def load_financials(tickers : list[str]):
-    dbutils = WorkspaceClient().dbutils
-    os.environ.setdefault("ALPHALAKE_ENV", "databricks")
-    try:
-        # Check if running inside Databricks
-        name = dbutils.widgets.get("name")
-        email = dbutils.widgets.get("email")
-    except NameError:
-        # Fallback to local environment variables or defaults
-        name = os.getenv("name", "Sadat Vahid")
-        email = os.getenv("email", "sadatvahid1372@gmail.com")
+def load_financials(tickers : list[str],name:str,email:str):
     destination = os.getenv("ALPHALAKE_ENV", "local")
     for ticker in tickers:
         df = get_company_facts(ticker,name,email)
@@ -26,6 +17,32 @@ def load_financials(tickers : list[str]):
         elif (destination == 'databricks'):
             save_company_facts_into_databricks(ticker,df)
         else:
-            ValueError("No destination has been chosen")
+            raise ValueError("No destination has been chosen")
 
-load_financials(["AAPL", "MSFT"])
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--env",
+        default="databricks",
+    )
+
+    parser.add_argument(
+        "--name",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--email",
+        required=True,
+    )
+
+    args = parser.parse_args()
+
+    os.environ["ALPHALAKE_ENV"] = args.env
+
+    load_financials(["AAPL", "MSFT"],
+        args.name,
+        args.email,)
