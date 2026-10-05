@@ -7,6 +7,7 @@ resource "databricks_job" "alphalake" {
     url      = var.repo_url
     provider = "gitHub"
     branch   = "main"
+
   }
 
   parameter {
