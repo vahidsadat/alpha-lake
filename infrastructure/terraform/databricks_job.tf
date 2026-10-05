@@ -65,4 +65,10 @@ resource "databricks_job" "alphalake" {
     }
   }
 
+  schedule {
+    quartz_cron_expression = "0 0 7 * * ?"
+    timezone_id            = "Europe/Rome"
+    pause_status            = "UNPAUSED"
+  }
+
 }
