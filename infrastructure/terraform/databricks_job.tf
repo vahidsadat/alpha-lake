@@ -3,6 +3,12 @@ locals {
 }
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
+  schedule {
+    quartz_cron_expression = "0 0 7 * * ?"
+    timezone_id            = "Europe/Berlin"
+    pause_status            = "UNPAUSED"
+  }
+
   git_source {
     url      = var.repo_url
     provider = "gitHub"
@@ -63,12 +69,6 @@ resource "databricks_job" "alphalake" {
       notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
       source        = "WORKSPACE"
     }
-  }
-
-  schedule {
-    quartz_cron_expression = "0 0 7 * * ?"
-    timezone_id            = "Europe/Rome"
-    pause_status            = "UNPAUSED"
   }
 
 }
