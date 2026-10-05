@@ -12,6 +12,6 @@ variable "email" {
   sensitive = true
 }
 
-variable "github_repo_url" {
+variable "repo_url" {
   type = string
 }

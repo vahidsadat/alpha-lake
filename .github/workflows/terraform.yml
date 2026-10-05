@@ -64,7 +64,11 @@ jobs:
         working-directory: infrastructure/terraform
     env:
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      
+      TF_VAR_ALPHALAKE_ENV: ${{ vars.ALPHALAKE_ENV }}
+      TF_VAR_name: ${{ secrets.SEC_NAME }}
+      TF_VAR_email: ${{ secrets.SEC_EMAIL }}
+      TF_VAR_repo_url: ${{ vars.repo_url }}
+
     steps:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout

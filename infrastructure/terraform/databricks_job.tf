@@ -4,7 +4,7 @@ locals {
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
   git_source {
-    url      = var.github_repo_url
+    url      = var.repo_url
     provider = "gitHub"
     branch   = "main"
   }
