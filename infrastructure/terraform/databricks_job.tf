@@ -3,10 +3,11 @@ locals {
 }
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
+
   schedule {
     quartz_cron_expression = "0 0 7 * * ?"
     timezone_id            = "Europe/Berlin"
-    pause_status            = "UNPAUSED"
+    pause_status           = "UNPAUSED"
   }
 
   git_source {
