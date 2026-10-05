@@ -72,4 +72,18 @@ resource "databricks_job" "alphalake" {
     }
   }
 
+  task {
+    task_key        = "04_gold_quality"
+    environment_key = "default"
+
+    depends_on {
+      task_key = "03_gold_transform"
+    }
+
+    spark_python_task {
+      python_file = "src/quality/run_gold_quality.py"
+      source      = "GIT"
+    }
+  }
+
 }
