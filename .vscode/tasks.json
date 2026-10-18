@@ -1,0 +1,106 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Pipeline locally",
+            "type": "shell",
+            "command": "python",
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "args": [
+                "pipeline.py"
+            ]
+        },
+        {
+            "label": "Run Terraform Init",
+            "type": "shell",
+            "command": "terraform",
+            "options": {
+                "cwd": "${workspaceFolder}/infrastructure/terraform"
+            },
+            "args": [
+                "init"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "Run Terraform Format",
+            "type": "shell",
+            "command": "terraform",
+            "options": {
+                "cwd": "${workspaceFolder}/infrastructure/terraform"
+            },
+            "args": [
+                "fmt"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "Run Terraform Plan",
+            "type": "shell",
+            "command": "terraform",
+            "options": {
+                "cwd": "${workspaceFolder}/infrastructure/terraform"
+            },
+            "args": [
+                "plan"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "Run Terraform Validation",
+            "type": "shell",
+            "command": "terraform",
+            "options": {
+                "cwd": "${workspaceFolder}/infrastructure/terraform"
+            },
+            "args": [
+                "validate"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "label": "Run Terraform Apply",
+            "type": "shell",
+            "command": "terraform",
+            "options": {
+                "cwd": "${workspaceFolder}/infrastructure/terraform"
+            },
+            "args": [
+                "apply"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        }
+    ]
+}
