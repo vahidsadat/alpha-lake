@@ -13,6 +13,17 @@
             ]
         },
         {
+            "label": "Run AI Assistant",
+            "type": "shell",
+            "command": "python",
+            "options": {
+                "cwd": "${workspaceFolder}/src/ai"
+            },
+            "args": [
+                "cli.py"
+            ]
+        },
+        {
             "label": "Run Terraform Init",
             "type": "shell",
             "command": "terraform",
