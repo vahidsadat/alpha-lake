@@ -10,7 +10,8 @@ dependencies = [
     "pyspark==4.1.3",
     "pandas",
     "databricks-sdk",
-    "openai"
+    "openai",
+    "databricks-sql-connector",
 ]
 
 [dependency-groups]
