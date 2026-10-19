@@ -17,10 +17,11 @@
             "type": "shell",
             "command": "python",
             "options": {
-                "cwd": "${workspaceFolder}/src/ai"
+                "cwd": "${workspaceFolder}"
             },
             "args": [
-                "cli.py"
+                "-m",
+                "src.ai.cli"
             ]
         },
         {

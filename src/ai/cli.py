@@ -1,4 +1,4 @@
-from chat_service import process_message
+from .chat_service import process_message
 
 def main():
     while True:

@@ -1,7 +1,7 @@
-from tools.registry import TOOLS
-from tools.executor import execute_tool
-from prompts import SYSTEM_PROMPT
-from client import create_llm_client
+from .tools.registry import TOOLS
+from .tools.executor import execute_tool
+from .prompts import SYSTEM_PROMPT
+from .client import create_llm_client
 
 import json
 

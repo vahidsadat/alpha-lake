@@ -1,8 +1,8 @@
 # AlphaLake — Financial Data Lakehouse Platform
 
-AlphaLake is an end-to-end financial data engineering platform that ingests public company financial data from the SEC, transforms it through a Bronze/Silver/Gold lakehouse architecture, validates the resulting analytical dataset, and exposes it to Power BI for financial analysis.
+AlphaLake is an end-to-end financial data lakehouse and AI-assisted research platform. It ingests public-company financial data from the SEC, transforms it through a Bronze/Silver/Gold architecture, validates the analytical dataset, exposes it to Power BI, and now includes a grounded AI assistant that retrieves financial data from Databricks before answering company-financial questions.
 
-The project was built as a practical Data Engineering project covering the complete lifecycle of a modern data platform:
+The project was built as a practical Data Engineering project and is now being extended toward an AI-assisted fundamental research application. It covers:
 
 - Data ingestion
 - PySpark transformations
@@ -15,6 +15,9 @@ The project was built as a practical Data Engineering project covering the compl
 - CI/CD with GitHub Actions
 - Automated scheduling
 - Power BI reporting
+- Local LLM integration with Ollama / Qwen
+- LLM function calling with Databricks-backed financial tools
+- Modular AI service architecture
 
 ---
 
@@ -22,14 +25,16 @@ The project was built as a practical Data Engineering project covering the compl
 
 ```mermaid
 flowchart TD
-
     A[SEC EDGAR API] --> B[Bronze Layer]
-
     B --> C[Silver Layer]
     C --> D[Gold Layer]
     D --> E[Data Quality Checks]
     E --> F[Reporting View]
     F --> G[Power BI]
+    F --> H[AI Financial Tool]
+    H --> I[Chat Service]
+    J[Ollama / Qwen LLM] <--> I
+    K[CLI] --> I
 
     subgraph Databricks
         B
@@ -39,46 +44,33 @@ flowchart TD
         F
     end
 
-    H[GitHub] --> I[GitHub Actions]
-    I --> J[Terraform]
-    J --> K[Databricks Infrastructure]
-
-    L[HCP Terraform] --> J
-
-    M[Databricks Workflow Scheduler] --> B
+    L[GitHub] --> M[GitHub Actions]
+    M --> N[Terraform]
+    N --> O[Databricks Infrastructure]
+    P[HCP Terraform] <--> N
+    Q[Databricks Workflow Scheduler] --> B
 ```
 
-The main data flow is:
+Main data flow:
 
 ```text
-SEC EDGAR
-    ↓
-Bronze
-    ↓
-Silver
-    ↓
-Gold
-    ↓
-Data Quality
-    ↓
-Reporting View
-    ↓
-Power BI
+SEC EDGAR → Bronze → Silver → Gold → Data Quality → Reporting View
 ```
 
-Infrastructure deployment is handled separately:
+Consumer paths:
 
 ```text
-GitHub
-    ↓
-GitHub Actions
-    ↓
-Terraform
-    ↓
-Databricks
+Reporting View → Power BI
+Reporting View → AI financial tool → LLM → grounded answer
 ```
 
-Terraform state is stored remotely in HCP Terraform.
+Infrastructure deployment:
+
+```text
+GitHub → GitHub Actions → Terraform → Databricks
+```
+
+Terraform state is stored remotely in HCP Terraform. See [`docs/architecture.md`](docs/architecture.md) for the detailed architecture.
 
 ---
 
@@ -129,7 +121,20 @@ The Gold layer converts raw accounting facts into company-level financial metric
 
 - Databricks SQL
 - Power BI
+- Local LLM integration
+- LLM tool/function calling
+- Grounded financial question answering
+- Separation of CLI, chat service, tool registry, executor, and data tool
 - DAX
+
+## AI / Application
+
+- Ollama
+- Qwen
+- OpenAI-compatible Python client
+- LLM function/tool calling
+- Pandas
+- Databricks SQL Connector
 
 ---
 
@@ -144,51 +149,44 @@ alpha-lake/
 │   └── gold/
 │
 ├── docs/
+│   ├── architecture.md
+│   ├── project_scope.md
+│   └── images/
 │
-├── infrastructure/
-│   └── terraform/
-│       ├── providers.tf
-│       ├── variables.tf
-│       ├── databricks_job.tf
-│       └── outputs.tf
+├── terraform/
+│   ├── providers.tf
+│   ├── variables.tf
+│   ├── databricks_job.tf
+│   ├── outputs.tf
+│   └── versions.tf
 │
 ├── src/
+│   ├── ai/
+│   │   ├── client.py
+│   │   ├── prompts.py
+│   │   ├── chat_service.py
+│   │   ├── cli.py
+│   │   └── tools/
+│   │       ├── financials.py
+│   │       ├── registry.py
+│   │       └── executor.py
+│   │
 │   ├── bronze/
-│   │   └── load_financials.py
-│   │
-│   ├── ingestion/
-│   │   └── sec/
-│   │       ├── sec_client.py
-│   │       └── ticker_cik.py
-│   │
+│   ├── ingestion/sec/
 │   ├── silver/
-│   │
 │   ├── gold/
-│   │   ├── company_fundamentals.py
-│   │   └── cash_flow_metrics.py
-│   │
 │   ├── quality/
-│   │   ├── gold_quality.py
-│   │   └── run_gold_quality.py
-│   │
 │   ├── infrastructure/
-│   │   ├── spark/
-│   │   └── storage/
-│   │       ├── local.py
-│   │       └── databricks.py
-│   │
 │   └── pipeline.py
 │
 ├── tests/
-│
-├── .github/
-│   └── workflows/
-│       └── terraform.yml
-│
+├── .github/workflows/
 ├── .gitignore
 ├── pyproject.toml
 └── README.md
 ```
+
+The AI package is separated by responsibility: the CLI handles terminal I/O, the chat service orchestrates the conversation, the registry describes tools to the LLM, the executor dispatches tool calls, and the financial tool performs Databricks-backed retrieval.
 
 ---
 
@@ -795,6 +793,79 @@ The dashboard allows users to interactively analyze the financial history of ind
 
 ---
 
+# 16. AlphaLake AI Assistant
+
+AlphaLake now includes a working local AI assistant for structured financial questions. The assistant uses a local Qwen model through Ollama's OpenAI-compatible endpoint.
+
+For company financial questions, the system prompt requires the model to retrieve AlphaLake data through an available financial tool instead of answering from pretrained knowledge.
+
+Current request flow:
+
+```text
+User question
+    ↓
+CLI
+    ↓
+Chat Service
+    ↓
+Ollama / Qwen
+    ↓
+Tool request
+    ↓
+Tool Registry + Executor
+    ↓
+get_financial_report()
+    ↓
+Databricks SQL reporting view
+    ↓
+DataFrame → JSON
+    ↓
+LLM
+    ↓
+Grounded answer
+```
+
+Current AI structure:
+
+```text
+src/ai/
+├── client.py          # creates the LLM client
+├── prompts.py         # AlphaLake system instructions
+├── chat_service.py    # conversation and tool-call orchestration
+├── cli.py             # terminal interface
+└── tools/
+    ├── financials.py  # Databricks-backed financial function
+    ├── registry.py    # tool schemas exposed to the LLM
+    └── executor.py    # tool-name → Python-function dispatch
+```
+
+Example supported question:
+
+```text
+Compare Apple's net profit margin in 2020, 2022, and 2025.
+```
+
+The exact financial values come from AlphaLake's Databricks reporting layer; the LLM is responsible for explaining and comparing the retrieved results.
+
+This follows a deliberate design rule:
+
+```text
+Exact numbers and deterministic calculations → SQL / Python
+Explanation and synthesis                 → LLM
+```
+
+The next application milestone is to expose the reusable chat service through FastAPI. Planned endpoints are:
+
+```text
+POST /chat
+GET  /companies/{ticker}
+GET  /health
+```
+
+FastAPI is not yet part of the implemented architecture.
+
+---
+
 # End-to-End Platform
 
 The completed AlphaLake v1 architecture is:
@@ -824,6 +895,20 @@ The completed AlphaLake v1 architecture is:
                              │
                              ▼
                         POWER BI
+
+
+                    AI RESEARCH PATH
+
+                REPORTING VIEW
+                     │
+                     ▼
+              Financial Tool
+                     │
+                     ▼
+                 Chat Service
+                  ↕       │
+            Ollama/Qwen   ▼
+                         CLI
 
 
                  INFRASTRUCTURE LAYER
@@ -927,6 +1012,14 @@ Analytical data is validated before being treated as trusted reporting data.
 
 Power BI consumes a dedicated SQL view instead of depending directly on internal Gold-table implementation details.
 
+### Grounded AI responses
+
+Financial values are retrieved from AlphaLake data through deterministic tools before the LLM explains them. The model is not used as the source of truth for financial figures.
+
+### Interface-independent chat logic
+
+Terminal I/O is isolated in `cli.py`, while reusable conversation and tool-calling logic lives in `chat_service.py`. This prepares the application for a future FastAPI interface without duplicating AI logic.
+
 ## Dashboard Preview
 
 ![AlphaLake Power BI Dashboard](docs/images/alphalake-powerbi-dashboard.png)
@@ -935,36 +1028,27 @@ Power BI consumes a dedicated SQL view instead of depending directly on internal
 
 # Future Improvements
 
-Possible future extensions include:
+The next planned extensions are:
 
-- Additional companies
-- Daily stock-market prices
-- Market-data APIs
-- Financial growth metrics
-- Revenue CAGR
-- FCF growth
-- FCF margin
-- Debt ratios
-- ROIC
-- Company comparison dashboard
-- Quality / Value / Risk scoring
-- Portfolio analytics
-- News and SEC filing ingestion
-- Streaming market data
-- dbt transformation layer
-- Additional automated data-quality checks
-- Alerting and monitoring
-- AWS deployment
+- FastAPI application layer (`/chat`, `/companies/{ticker}`, `/health`)
+- Per-session conversation state for API clients
+- Automatic onboarding when a requested company is not yet available in AlphaLake
+- Additional deterministic financial tools and company comparisons
+- SEC 10-K / 10-Q text ingestion
+- Chunking, embeddings, semantic retrieval, and RAG over SEC filings
+- Evidence-backed risk and filing analysis
+- Additional companies and financial metrics
+- Market-price data and valuation metrics
+- Monitoring and alerting
+- Additional automated tests and quality checks
 
-These features are intentionally outside the scope of AlphaLake v1.
-
-The current version focuses on building a reliable, automated end-to-end financial data platform before adding additional complexity.
+The long-term direction is an AI-assisted fundamental research platform. AlphaLake should retrieve evidence, calculate reliable metrics, and explain financial information; it is not intended to predict stock prices or make investment decisions for the user.
 
 ---
 
 # Project Status
 
-**AlphaLake v1: Complete**
+**AlphaLake data platform v1: Complete — AI application layer: In progress**
 
 Current platform capabilities:
 
@@ -984,10 +1068,16 @@ HCP remote state            ✅
 GitHub Actions CI/CD        ✅
 Reporting SQL view          ✅
 Power BI dashboard          ✅
+Local Ollama / Qwen client  ✅
+Financial tool calling      ✅
+Databricks-grounded Q&A     ✅
+Modular AI package          ✅
+FastAPI application         🚧 Planned next
+SEC filing RAG              🚧 Planned later
 ```
 
 ---
 
 # Author
 
-Built as a hands-on Data Engineering and Lakehouse project demonstrating the design, implementation, deployment, automation, and consumption of a modern analytical data platform.
+Built as a hands-on Data Engineering, Lakehouse, and AI-assisted financial research project demonstrating ingestion, transformation, deployment, automation, analytics, grounded LLM tool calling, and the evolution of a data platform into an application.
