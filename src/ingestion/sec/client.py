@@ -1,6 +1,5 @@
-from edgar import Company, set_identity
 import requests
-from src.ingestion.sec.ticker_cik import get_CIK
+from src.ingestion.sec.ticker import get_CIK
 
 
 
@@ -13,5 +12,6 @@ def get_company_facts(ticker:str,name:str, email:str):
     cik = get_CIK(ticker=ticker, name=name,email=email)
     api_url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     response = requests.get(api_url, headers=HEADERS, timeout=30)
+    response.raise_for_status()
     data = response.json()
     return data

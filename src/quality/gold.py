@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-def validate_gold (df: DataFrame) -> bool:
+def validate_gold (df: DataFrame) -> None:
 
     if df.isEmpty():
         raise ValueError("DataFrame is empty")

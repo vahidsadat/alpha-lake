@@ -6,10 +6,11 @@
             "type": "shell",
             "command": "python",
             "options": {
-                "cwd": "${workspaceFolder}/src"
+                "cwd": "${workspaceFolder}"
             },
             "args": [
-                "pipeline.py"
+                "-m",
+                "src.pipelines.local"
             ]
         },
         {

@@ -1,7 +1,4 @@
 import requests
-import os
-from dotenv import load_dotenv
-load_dotenv()
 
 api_url = "https://www.sec.gov/files/company_tickers.json"
 
@@ -12,7 +9,8 @@ def get_company_tickers(name:str,email:str):
     "Accept-Encoding": "gzip, deflate"
     }
 
-    response = requests.get(api_url, headers=headers)
+    response = requests.get(api_url, headers=headers, timeout=30)
+    response.raise_for_status()
     data = response.json()
     return(data)
 

@@ -5,6 +5,7 @@
 !.vscode/extensions.json
 __pycache__/
 *.pyc
+*.egg-info/
 warehouse/
 data/bronze/
 data/silver/

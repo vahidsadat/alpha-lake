@@ -1,16 +1,10 @@
-from pathlib import Path
 from pyspark.sql import SparkSession, functions as F
+from pyspark.sql import DataFrame
 
-spark = SparkSession.builder.appName(
-    name="AlphaLake"
-).getOrCreate()
 
-def transform_sec_facts(path: Path,ticker:str):
-    raw_df = spark.read.text(
-        str(path),
-        wholetext=True)
+def transform_sec_facts(df: DataFrame,spark: SparkSession,ticker:str):
     
-    variant_df = raw_df.select( F.parse_json("value").alias("document") )
+    variant_df = df.select( F.parse_json("value").alias("document") )
     us_gaap_df = variant_df.select(F.variant_get(F.col("document"),"$.facts['us-gaap']","variant").alias("us_gaap"))
     concept_df = us_gaap_df.lateralJoin(spark.tvf.variant_explode((F.col("us_gaap")).outer()).alias("concept"))
     units_df = concept_df.select(F.variant_get(F.col("concept.value"),"$.units","variant").alias("units_info"), "concept.key")

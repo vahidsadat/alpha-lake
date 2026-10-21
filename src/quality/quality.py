@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 
-from src.quality.gold_quality import validate_gold
+from .gold import validate_gold
 
 
 def main():

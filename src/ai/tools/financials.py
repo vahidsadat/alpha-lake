@@ -15,6 +15,7 @@ def get_financial_report(ticker : str, years : list[int]) -> pd.DataFrame:
     years = sorted(set(years))  # Remove duplicates and sort the years
 
     placeholders = ', '.join(f":year_{i}" for i in range(len(years)))
+    ticker = ticker.upper()
     parameters = {"ticker": ticker}
 
     parameters.update({f"year_{i}": year for i, year in enumerate(years)})
@@ -22,7 +23,7 @@ def get_financial_report(ticker : str, years : list[int]) -> pd.DataFrame:
     query =f"""
                     SELECT ticker, period_date, revenue, net_income, net_profit_margin FROM alphalake.gold.v_company_financials_report
                     WHERE ticker = :ticker AND YEAR(period_date) IN ({placeholders})
-                    LIMIT 100
+                    ORDER BY period_date LIMIT 100
                     """
     with sql.connect(
             server_hostname = os.getenv("DATABRICKS_HOST"),

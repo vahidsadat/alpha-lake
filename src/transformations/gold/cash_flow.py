@@ -1,21 +1,6 @@
-from pathlib import Path
-from pyspark.sql import SparkSession, DataFrame, functions as F
+from pyspark.sql import DataFrame, functions as F
 from pyspark.sql.window import Window
 
-
-
-def get_path():
-    return Path("data/silver/sec/financial_facts")
-
-def read_from_parquet():
-    spark = SparkSession.builder.appName("AnnualCashFlow").getOrCreate()
-    df = spark.read.parquet(str(get_path()))
-    return df
-
-def desire_ticker(ticker:str):
-    df = read_from_parquet()
-    ticker_df = df.filter(df.ticker == ticker)
-    return ticker_df
 
 def annual_duration_metrics_report(metric:str, output_name:str, df:DataFrame):
     
@@ -53,6 +38,5 @@ def annual_cash_flow_metrics(df:DataFrame) -> DataFrame:
     operating_cf_df = canonical_metric(df,"operating_cash_flow", "NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations")
     free_cash_flow_df = operating_cf_df.join(capex_df, ["ticker", "period_date"], "left").withColumn("free_cash_flow", F.col("operating_cash_flow") - F.col("capex")).orderBy(["ticker", "period_date"])
     return free_cash_flow_df
-if __name__ == "__main__":
-    df = read_from_parquet()
-    annual_cash_flow_metrics(df)
+
+

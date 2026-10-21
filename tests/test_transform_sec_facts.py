@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from src.silver.transform_sec_facts import transform_sec_facts
+from src.transformations.silver.sec_facts import transform_sec_facts
 from pyspark.sql import functions as F
 import decimal
 
