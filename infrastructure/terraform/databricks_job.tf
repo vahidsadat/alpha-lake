@@ -4,21 +4,16 @@ locals {
 resource "databricks_job" "alphalake" {
   name = "AlphaLake Financial Pipeline"
 
-  schedule {
-    quartz_cron_expression = "0 0 7 * * ?"
-    timezone_id            = "Europe/Berlin"
-    pause_status           = "UNPAUSED"
-  }
+  # schedule {
+  #   quartz_cron_expression = "0 0 7 * * ?"
+  #   timezone_id            = "Europe/Berlin"
+  #   pause_status           = "UNPAUSED"
+  # }
 
   git_source {
     url      = var.repo_url
     provider = "gitHub"
     branch   = "main"
-  }
-
-  parameter {
-    name    = "ALPHALAKE_ENV"
-    default = var.ALPHALAKE_ENV
   }
 
   environment {
@@ -33,56 +28,14 @@ resource "databricks_job" "alphalake" {
   }
 
   task {
-    task_key        = "01_bronze_ingestion"
-    environment_key = "default"
-
-    spark_python_task {
-      python_file = "src/bronze/load_financials.py"
-      source      = "GIT"
-      parameters = [
-        "--name", var.name,
-        "--email", var.email
-      ]
-    }
-  }
-
-
-  task {
-    task_key        = "02_silver_transform"
-    environment_key = "default"
-
-    depends_on {
-      task_key = "01_bronze_ingestion"
-    }
-    spark_python_task {
-      python_file = "src/infrastructure/storage/databricks.py"
-      source      = "GIT"
-
-    }
-  }
-
-  task {
-    task_key = "03_gold_transform"
-    depends_on {
-      task_key = "02_silver_transform"
-    }
+    task_key = "alphalake_pipeline"
     notebook_task {
       notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
       source        = "WORKSPACE"
-    }
-  }
-
-  task {
-    task_key        = "04_gold_quality"
-    environment_key = "default"
-
-    depends_on {
-      task_key = "03_gold_transform"
-    }
-
-    spark_python_task {
-      python_file = "src/quality/run_gold_quality.py"
-      source      = "GIT"
+      base_parameters = {
+        sec_name  = var.sec_name,
+        sec_email = var.sec_email
+      }
     }
   }
 

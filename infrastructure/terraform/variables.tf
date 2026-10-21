@@ -3,11 +3,11 @@ variable "ALPHALAKE_ENV" {
   default = "databricks"
 }
 
-variable "name" {
+variable "sec_name" {
   type = string
 }
 
-variable "email" {
+variable "sec_email" {
   type      = string
   sensitive = true
 }

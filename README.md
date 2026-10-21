@@ -1,94 +1,122 @@
 # AlphaLake — Financial Data Lakehouse Platform
 
-AlphaLake is an end-to-end financial data lakehouse and AI-assisted research platform. It ingests public-company financial data from the SEC, transforms it through a Bronze/Silver/Gold architecture, validates the analytical dataset, exposes it to Power BI, and now includes a grounded AI assistant that retrieves financial data from Databricks before answering company-financial questions.
+AlphaLake is an end-to-end financial data engineering and AI-assisted research project. It ingests public-company financial data from the SEC, processes it through a Bronze/Silver/Gold architecture with PySpark, supports both local and Databricks storage backends, validates analytical data, exposes curated data to reporting, and includes a grounded local AI assistant that retrieves financial data before answering company-financial questions.
 
-The project was built as a practical Data Engineering project and is now being extended toward an AI-assisted fundamental research application. It covers:
+The current architecture is intentionally split by responsibility:
 
-- Data ingestion
-- PySpark transformations
-- Medallion architecture
-- Delta Lake / Unity Catalog
-- Databricks Workflows
-- Data quality
-- Infrastructure as Code
-- Remote Terraform state
-- CI/CD with GitHub Actions
-- Automated scheduling
-- Power BI reporting
-- Local LLM integration with Ollama / Qwen
-- LLM function calling with Databricks-backed financial tools
-- Modular AI service architecture
+```text
+ingestion/        → external data acquisition
+transformations/  → DataFrame-in / DataFrame-out business logic
+storage/          → local and Databricks persistence
+pipelines/        → orchestration between stages
+runtime/          → Spark runtime creation/configuration
+quality/          → validation
+ai/               → LLM client, tool calling, and chat service
+infrastructure/   → Terraform for Databricks resources
+```
+
+The same Bronze, Silver, and Gold pipeline functions are reused for local and Databricks execution. Storage-specific behavior is isolated in `src/storage`.
 
 ---
 
-## Architecture
+## High-Level Architecture
 
 ```mermaid
 flowchart TD
-    A[SEC EDGAR API] --> B[Bronze Layer]
-    B --> C[Silver Layer]
-    C --> D[Gold Layer]
-    D --> E[Data Quality Checks]
-    E --> F[Reporting View]
-    F --> G[Power BI]
-    F --> H[AI Financial Tool]
-    H --> I[Chat Service]
-    J[Ollama / Qwen LLM] <--> I
-    K[CLI] --> I
+    SEC[SEC EDGAR Company Facts API] --> ING[SEC Ingestion]
+    ING --> B[Bronze: Raw Company Facts JSON]
+    B --> ST[Silver Transformation]
+    ST --> S[Silver: Normalized Financial Facts]
+    S --> GF[Gold Fundamentals + Cash Flow]
+    GF --> Q[Gold Validation]
+    Q --> CF[Gold: company_financials]
+    GF --> GM[Gold: growth_metrics]
+    GF --> RM[Gold: rolling_metrics]
+    GF --> CQ[Gold: cash_flow_quality]
 
-    subgraph Databricks
-        B
-        C
-        D
-        E
-        F
+    CF --> RV[Reporting View]
+    RV --> PBI[Power BI]
+    RV --> TOOL[AI Financial Tool]
+    TOOL --> CHAT[Chat Service]
+    LLM[Ollama / Qwen] <--> CHAT
+    CLI[CLI] --> CHAT
+
+    subgraph Local
+        LB[JSON / Parquet]
     end
 
-    L[GitHub] --> M[GitHub Actions]
-    M --> N[Terraform]
-    N --> O[Databricks Infrastructure]
-    P[HCP Terraform] <--> N
-    Q[Databricks Workflow Scheduler] --> B
+    subgraph Databricks
+        DBB[Unity Catalog Volume]
+        DBS[Delta Silver]
+        DBG[Delta Gold]
+    end
+
+    B -. destination=local .-> LB
+    S -. destination=local .-> LB
+    CF -. destination=local .-> LB
+
+    B -. destination=databricks .-> DBB
+    S -. destination=databricks .-> DBS
+    CF -. destination=databricks .-> DBG
+
+    GH[GitHub] --> GHA[GitHub Actions]
+    GHA --> TF[Terraform]
+    TF --> DBX[Databricks Job / Resources]
+    HCP[HCP Terraform State] <--> TF
 ```
 
-Main data flow:
+Core data flow:
 
 ```text
-SEC EDGAR → Bronze → Silver → Gold → Data Quality → Reporting View
+SEC
+↓
+Bronze JSON
+↓
+Silver financial facts
+↓
+Gold company_financials
+├── growth_metrics
+├── rolling_metrics
+└── cash_flow_quality
 ```
 
-Consumer paths:
+AI flow:
 
 ```text
-Reporting View → Power BI
-Reporting View → AI financial tool → LLM → grounded answer
+User
+↓
+CLI
+↓
+chat_service.py
+↓
+Qwen tool decision
+↓
+get_financial_report
+↓
+Databricks SQL
+↓
+tool result
+↓
+grounded answer
 ```
-
-Infrastructure deployment:
-
-```text
-GitHub → GitHub Actions → Terraform → Databricks
-```
-
-Terraform state is stored remotely in HCP Terraform. See [`docs/architecture.md`](docs/architecture.md) for the detailed architecture.
 
 ---
 
 # Project Goals
 
-AlphaLake was designed to answer two different questions at different layers.
+AlphaLake separates source fidelity from analytical interpretation.
 
 ### Silver
 
 > How did the SEC report the financial information?
 
-The Silver layer preserves normalized SEC filing facts and filing history.
+Silver preserves normalized SEC concepts, units, periods, filing metadata, and filing history.
 
 ### Gold
 
 > What does the financial information mean analytically?
 
-The Gold layer converts raw accounting facts into company-level financial metrics suitable for analytics and reporting.
+Gold converts SEC facts into company-level financial metrics and then derives additional analytical datasets.
 
 ---
 
@@ -102,18 +130,15 @@ The Gold layer converts raw accounting facts into company-level financial metric
 - JSON
 - Parquet
 - Delta Lake
-- Apache Iceberg for local experimentation
 - Databricks
 - Unity Catalog
+- Apache Iceberg for local experimentation/synchronization
 
-## Infrastructure
+## Infrastructure / DevOps
 
 - Terraform
-- HCP Terraform
+- HCP Terraform remote state
 - Databricks Terraform Provider
-
-## CI/CD
-
 - GitHub
 - GitHub Actions
 
@@ -121,13 +146,8 @@ The Gold layer converts raw accounting facts into company-level financial metric
 
 - Databricks SQL
 - Power BI
-- Local LLM integration
-- LLM tool/function calling
-- Grounded financial question answering
-- Separation of CLI, chat service, tool registry, executor, and data tool
-- DAX
 
-## AI / Application
+## AI
 
 - Ollama
 - Qwen
@@ -153,12 +173,13 @@ alpha-lake/
 │   ├── project_scope.md
 │   └── images/
 │
-├── terraform/
-│   ├── providers.tf
-│   ├── variables.tf
-│   ├── databricks_job.tf
-│   ├── outputs.tf
-│   └── versions.tf
+├── infrastructure/
+│   └── terraform/
+│       ├── providers.tf
+│       ├── variables.tf
+│       ├── databricks_job.tf
+│       ├── output.tf
+│       └── versions.tf
 │
 ├── src/
 │   ├── ai/
@@ -171,13 +192,40 @@ alpha-lake/
 │   │       ├── registry.py
 │   │       └── executor.py
 │   │
-│   ├── bronze/
-│   ├── ingestion/sec/
-│   ├── silver/
-│   ├── gold/
+│   ├── ingestion/
+│   │   └── sec/
+│   │       ├── client.py
+│   │       └── ticker.py
+│   │
+│   ├── pipelines/
+│   │   ├── bronze.py
+│   │   ├── silver.py
+│   │   ├── gold.py
+│   │   └── local.py
+│   │
 │   ├── quality/
-│   ├── infrastructure/
-│   └── pipeline.py
+│   │   ├── gold.py
+│   │   └── quality.py
+│   │
+│   ├── runtime/
+│   │   └── session.py
+│   │
+│   ├── storage/
+│   │   ├── path.py
+│   │   ├── bronze.py
+│   │   ├── silver.py
+│   │   ├── gold.py
+│   │   └── iceberg.py
+│   │
+│   └── transformations/
+│       ├── silver/
+│       │   └── sec_facts.py
+│       └── gold/
+│           ├── fundamentals.py
+│           ├── cash_flow.py
+│           ├── growth.py
+│           ├── rolling.py
+│           └── cash_flow_quality.py
 │
 ├── tests/
 ├── .github/workflows/
@@ -186,13 +234,98 @@ alpha-lake/
 └── README.md
 ```
 
-The AI package is separated by responsibility: the CLI handles terminal I/O, the chat service orchestrates the conversation, the registry describes tools to the LLM, the executor dispatches tool calls, and the financial tool performs Databricks-backed retrieval.
+---
+
+# Layer Responsibilities
+
+## `ingestion/`
+
+Responsible only for retrieving external source data.
+
+Current SEC flow:
+
+```text
+ticker
+↓
+Ticker → CIK mapping
+↓
+SEC Company Facts API
+↓
+Python dictionary
+```
+
+The ingestion layer does not decide how data is stored.
+
+## `transformations/`
+
+Contains pure analytical transformations as much as possible.
+
+```text
+DataFrame
+↓
+transformation
+↓
+DataFrame
+```
+
+Transformation modules do not decide whether the result is written to local Parquet or Databricks Delta.
+
+## `storage/`
+
+Owns persistence details.
+
+```text
+storage/bronze.py
+→ Bronze JSON read/write
+
+storage/silver.py
+→ Silver Parquet / Delta read/write
+
+storage/gold.py
+→ Gold Parquet / Delta write behavior
+
+storage/path.py
+→ environment-specific paths and table names
+```
+
+Current storage mapping:
+
+```python
+STORAGE_PATH = {
+    "local": {
+        "bronze": "data/bronze/sec",
+        "silver": "data/silver/sec",
+        "gold": "data/gold/sec",
+    },
+    "databricks": {
+        "bronze": "/Volumes/alphalake/raw/data/bronze/sec",
+        "silver": "alphalake.silver.financial_facts",
+        "gold": "alphalake.gold",
+    },
+}
+```
+
+## `pipelines/`
+
+Coordinates the layers.
+
+```text
+read
+↓
+transform
+↓
+validate
+↓
+write
+```
+
+The pipeline contains orchestration, not backend-specific storage implementation.
 
 ---
 
 # 1. SEC Data Ingestion
 
-Financial data is retrieved from the official SEC EDGAR Company Facts API.
+AlphaLake retrieves public-company financial facts from the SEC EDGAR Company Facts API.
 
 Example endpoint:
 
@@ -200,53 +333,84 @@ Example endpoint:
 https://data.sec.gov/api/xbrl/companyfacts/CIKXXXXXXXXXX.json
 ```
 
-Ticker symbols are mapped to SEC CIK identifiers before retrieving company facts.
+Ticker symbols are mapped to CIK identifiers before fetching company facts.
 
-The ingestion layer supports multiple companies and stores the original SEC response in the Bronze layer.
+The SEC requires a descriptive `User-Agent`. AlphaLake passes a name and email into the ingestion functions.
+
+### Local configuration
+
+Local execution reads:
+
+```text
+SEC_NAME
+SEC_EMAIL
+```
+
+from the environment, typically through a local `.env` file that is not committed to Git.
 
 Example:
 
-```text
-Ticker
-  ↓
-Ticker → CIK mapping
-  ↓
-SEC Company Facts API
-  ↓
-Raw JSON
+```env
+SEC_NAME=Your Name
+SEC_EMAIL=your-email@example.com
 ```
+
+### Databricks configuration
+
+Do not hardcode the SEC identity inside notebooks.
+
+Use Databricks Job parameters (or a Databricks secret if preferred) and pass the values into `run_bronze()`.
+
+A thin Bronze notebook can look like:
+
+```python
+dbutils.widgets.text("sec_name", "")
+dbutils.widgets.text("sec_email", "")
+
+name = dbutils.widgets.get("sec_name")
+email = dbutils.widgets.get("sec_email")
+
+from src.pipelines.bronze import run_bronze
+
+run_bronze(
+    tickers=["AAPL", "MSFT"],
+    name=name,
+    email=email,
+    destination="databricks",
+)
+```
+
+The notebook only provides runtime parameters and calls the shared Python pipeline. It should not duplicate ingestion or transformation logic.
 
 ---
 
 # 2. Bronze Layer
 
-The Bronze layer preserves the original SEC Company Facts JSON.
+Bronze preserves the original SEC Company Facts response.
 
-In Databricks, Bronze files are stored inside a Unity Catalog Volume:
+Local example:
 
 ```text
-/Volumes/alphalake/raw/data/bronze/sec/<TICKER>/companyfacts.json
+data/bronze/sec/AAPL/companyfacts.json
 ```
 
-Example:
+Databricks example:
 
 ```text
 /Volumes/alphalake/raw/data/bronze/sec/AAPL/companyfacts.json
 ```
 
-The Bronze layer intentionally performs minimal transformation.
+The same `save_company_facts()` interface is used for both destinations because both are file-based JSON storage.
 
-Its purpose is to preserve the source data for reproducibility and reprocessing.
+Silver reads the full JSON document as text (`wholetext=True`) so it can be parsed consistently by the Silver transformation.
 
 ---
 
 # 3. Silver Layer
 
-The SEC Company Facts JSON contains deeply nested financial facts.
+Silver normalizes the nested SEC Company Facts JSON into filing-level financial facts.
 
-PySpark is used to flatten and normalize these structures into a structured dataset.
-
-The Silver schema contains fields such as:
+Typical fields include:
 
 ```text
 ticker
@@ -263,250 +427,478 @@ fiscal_year
 value
 ```
 
-The production Silver table is:
+Databricks table:
 
 ```text
 alphalake.silver.financial_facts
 ```
 
-The Silver layer preserves filing history instead of immediately reducing the data to one value per company and year.
+Local dataset:
+
+```text
+data/silver/sec/financial_facts/
+```
+
+Silver is partitioned by `ticker`.
+
+### Write behavior
+
+Local:
+
+```text
+Parquet
++ dynamic partition overwrite
+```
+
+Databricks:
+
+```text
+Delta
++ replaceWhere ticker = <ticker>
+```
+
+`read_silver()` can return:
+
+- all Silver data, or
+- only one ticker when `ticker=` is supplied.
+
+This allows Gold to read the full Silver dataset without duplicating local/Databricks read logic.
 
 ---
 
 # 4. Gold Layer
 
-The Gold layer converts SEC accounting concepts into analytical financial metrics.
+Gold has a core dataset plus derived analytical datasets.
 
-The primary table is:
+## Core Gold table
 
 ```text
-alphalake.gold.company_financials
+company_financials
 ```
 
-The table contains company-level annual financial metrics including:
+Produced from:
+
+```text
+Silver
+├── annual_derived_metrics()
+└── annual_cash_flow_metrics()
+       ↓
+join on ticker + period_date
+       ↓
+company_financials
+```
+
+Typical fields include:
 
 ```text
 ticker
 period_date
-
 revenue
 net_income
 operating_income
-
 assets
 equity
-
 operating_margin
 net_profit_margin
-
 return_on_assets
 return_on_equity
-
 operating_cash_flow
+operating_cash_flow_source
 capex
+capex_source
 free_cash_flow
 ```
 
----
-
-## Financial Metric Logic
-
-Several SEC concepts may represent the same financial meaning.
-
-AlphaLake therefore implements preferred and fallback accounting concepts when building analytical metrics.
-
-Examples include:
-
-```text
-Revenue
-Operating Cash Flow
-Capital Expenditure
-```
-
-The Gold layer also tracks source provenance for selected financial metrics.
-
-For example:
-
-```text
-operating_cash_flow_source
-capex_source
-```
-
----
-
-# 5. Incremental Gold Updates
-
-The business key of the Gold dataset is:
+The business key is:
 
 ```text
 ticker + period_date
 ```
 
-Before updating the Gold table, AlphaLake compares incoming rows with existing rows.
+## Derived Gold datasets
 
-Only changed or new rows are merged.
+The core Gold DataFrame is then used to create:
+
+```text
+growth_metrics
+rolling_metrics
+cash_flow_quality
+```
 
 Conceptually:
 
 ```text
-New Gold Dataset
+Silver financial_facts
         ↓
-Compare against existing Gold
+fundamentals + cash flow
         ↓
-New row? ───────────────→ MERGE
-Changed row? ───────────→ MERGE
-Identical row? ─────────→ Skip
+company_financials
+        ├── annual_growth_metrics()
+        │       ↓
+        │   growth_metrics
+        │
+        ├── rolling_metrics()
+        │       ↓
+        │   rolling_metrics
+        │
+        └── cash_flow_quality()
+                ↓
+            cash_flow_quality
 ```
 
-This avoids unnecessary table rewrites and unnecessary Delta/Iceberg versions.
-
----
-
-# 6. Local Development
-
-The project was initially developed locally using PySpark.
-
-Local storage was used for development and experimentation with:
-
-- Parquet
-- Apache Iceberg
-- Spark SQL
-- MERGE operations
-- Snapshot history
-
-Apache Iceberg was used locally to understand table formats, snapshot lineage, and change-aware MERGE behavior.
-
-The production Databricks implementation uses Delta Lake and Unity Catalog.
-
-This keeps transformation logic independent from the underlying storage implementation.
+Databricks tables:
 
 ```text
-Transformation Logic
-       ↓
-Storage Adapter
-   ↙         ↘
-Local       Databricks
+alphalake.gold.company_financials
+alphalake.gold.growth_metrics
+alphalake.gold.rolling_metrics
+alphalake.gold.cash_flow_quality
+```
+
+Local datasets:
+
+```text
+data/gold/sec/company_financials/
+data/gold/sec/growth_metrics/
+data/gold/sec/rolling_metrics/
+data/gold/sec/cash_flow_quality/
 ```
 
 ---
 
-# 7. Databricks Lakehouse
+# 5. Gold Write Strategy
 
-The production environment uses Databricks Free Edition with serverless compute.
+The core and derived Gold datasets intentionally use different update strategies.
 
-Unity Catalog structure:
+## `company_financials`
 
-```text
-Catalog
-└── alphalake
-    │
-    ├── raw
-    │   └── Volume: data
-    │
-    ├── silver
-    │   └── financial_facts
-    │
-    └── gold
-        └── company_financials
-```
-
-The full production flow is therefore:
-
-```text
-SEC
- ↓
-Unity Catalog Volume
- ↓
-Silver Delta Table
- ↓
-Gold Delta Table
-```
-
----
-
-# 8. Databricks Workflow
-
-The pipeline is implemented as a multi-task Databricks Job.
-
-```text
-01_bronze_ingestion
-        ↓
-02_silver_transform
-        ↓
-03_gold_transform
-        ↓
-04_gold_quality
-```
-
-Each task has a single responsibility.
-
-### Task 1 — Bronze
-
-Retrieves SEC financial information and stores the raw JSON.
-
-### Task 2 — Silver
-
-Transforms the SEC JSON into normalized financial facts.
-
-### Task 3 — Gold
-
-Builds company-level analytical financial metrics.
-
-### Task 4 — Data Quality
-
-Validates the final Gold dataset.
-
----
-
-# 9. Data Quality
-
-AlphaLake includes a dedicated Gold-layer quality module:
-
-```text
-src/quality/gold_quality.py
-```
-
-Current checks include:
-
-### Non-empty dataset
-
-The Gold dataset must contain records.
-
-### Non-null business keys
-
-The following fields cannot be null:
-
-```text
-ticker
-period_date
-```
-
-### Unique business key
-
-The combination:
+Databricks compares incoming rows with the existing table using:
 
 ```text
 ticker + period_date
 ```
 
-must be unique.
-
-If any validation fails, an exception is raised and the Databricks workflow fails.
+Only new or changed records are passed into a Delta `MERGE`.
 
 ```text
-Gold
- ↓
-Quality Check
- ↓
-Valid ─────→ Pipeline succeeds
-Invalid ───→ Pipeline fails
+incoming row
+   ↓
+new?       → MERGE
+changed?   → MERGE
+identical? → skip
 ```
 
-This prevents silent publication of invalid analytical data.
+This avoids unnecessary updates to the main historical Gold table.
+
+## Derived Gold tables
+
+`growth_metrics`, `rolling_metrics`, and `cash_flow_quality` are deterministic outputs recalculated from the complete core Gold dataset.
+
+Current Databricks behavior is therefore:
+
+```text
+recompute complete derived dataset
+↓
+overwrite complete derived table
+```
+
+This is intentionally simpler than maintaining independent incremental logic for each derived dataset.
+
+Because of this design, the Gold pipeline should receive the complete Silver dataset when running a full Gold refresh.
 
 ---
 
-# 10. Automated Scheduling
+# 6. Data Quality
+
+Core Gold data is validated before it is written.
+
+Current checks include:
+
+```text
+dataset is not empty
+ticker is not null
+period_date is not null
+ticker + period_date is unique
+```
+
+Pipeline order:
+
+```text
+Gold transformation
+↓
+validate_gold()
+↓
+write company_financials
+↓
+write derived Gold datasets
+```
+
+A failed validation raises an exception and prevents invalid core Gold data from being published.
+
+---
+
+# 7. Local Pipeline
+
+The local entrypoint is:
+
+```text
+src/pipelines/local.py
+```
+
+It creates the Spark runtime, reads the SEC identity from environment variables, and calls the same shared pipeline functions used by the Databricks path.
+
+Conceptually:
+
+```python
+spark = get_spark_session()
+
+run_bronze(
+    tickers,
+    name,
+    email,
+    destination="local",
+)
+
+run_silver(
+    spark,
+    tickers,
+    destination="local",
+)
+
+silver_df = read_silver(
+    spark=spark,
+    destination="local",
+)
+
+run_gold(
+    silver_df,
+    destination="local",
+)
+```
+
+The refactored local Bronze → Silver → Gold path has been executed successfully.
+
+---
+
+# 8. Databricks Pipeline
+
+AlphaLake does not maintain a second copy of the pipeline logic for Databricks.
+
+Instead:
+
+```text
+Databricks notebook / Job task
+↓
+shared src/pipelines/* function
+↓
+shared transformations
+↓
+storage backend selected by destination="databricks"
+```
+
+Recommended Databricks task entrypoints are thin notebooks, for example:
+
+```text
+notebooks/
+├── bronze.py
+├── silver.py
+└── gold.py
+```
+
+### Bronze notebook
+
+```python
+from src.pipelines.bronze import run_bronze
+
+run_bronze(
+    tickers=tickers,
+    name=sec_name,
+    email=sec_email,
+    destination="databricks",
+)
+```
+
+### Silver notebook
+
+```python
+from src.pipelines.silver import run_silver
+
+run_silver(
+    spark=spark,
+    tickers=tickers,
+    destination="databricks",
+)
+```
+
+### Gold notebook
+
+```python
+from src.storage.silver import read_silver
+from src.pipelines.gold import run_gold
+
+silver_df = read_silver(
+    spark=spark,
+    destination="databricks",
+)
+
+run_gold(
+    silver_df,
+    destination="databricks",
+)
+```
+
+The notebooks should contain runtime wiring only. Business logic stays in the Python package.
+
+---
+
+# 9. Databricks Lakehouse
+
+Unity Catalog layout:
+
+```text
+alphalake
+├── raw
+│   └── Volume: data
+│       └── bronze/sec/<TICKER>/companyfacts.json
+│
+├── silver
+│   └── financial_facts
+│
+└── gold
+    ├── company_financials
+    ├── growth_metrics
+    ├── rolling_metrics
+    └── cash_flow_quality
+```
+
+Production storage flow:
+
+```text
+SEC
+↓
+Unity Catalog Volume (Bronze JSON)
+↓
+Delta Silver table
+↓
+Delta Gold tables
+```
+
+---
+
+# 10. Reporting
+
+Power BI consumes a stable Gold reporting view rather than coupling directly to internal transformation code.
+
+Current reporting view:
+
+```text
+alphalake.gold.v_company_financials_report
+```
+
+Flow:
+
+```text
+company_financials
+↓
+v_company_financials_report
+↓
+Power BI
+```
+
+---
+
+# 11. AI Assistant
+
+AlphaLake includes a local AI assistant based on Ollama and Qwen.
+
+Package:
+
+```text
+src/ai/
+├── client.py
+├── prompts.py
+├── chat_service.py
+├── cli.py
+└── tools/
+    ├── financials.py
+    ├── registry.py
+    └── executor.py
+```
+
+Responsibilities:
+
+```text
+client.py
+→ creates the OpenAI-compatible Ollama client
+
+prompts.py
+→ contains grounding instructions
+
+chat_service.py
+→ decides whether a tool is needed, executes requested tools, and produces the final answer
+
+cli.py
+→ terminal input/output
+
+tools/registry.py
+→ exposes tool schemas to the LLM
+
+tools/executor.py
+→ dispatches tool calls
+
+tools/financials.py
+→ queries Databricks financial data
+```
+
+`tool_choice="auto"` allows normal conversational questions to be answered without forcing a database tool call, while financial-number questions are grounded through the registered tool.
+
+The current service supports multiple tool calls returned in one LLM turn before producing the final answer.
+
+---
+
+# 12. Infrastructure and CI/CD
+
+Terraform lives at:
+
+```text
+infrastructure/terraform/
+```
+
+It remains separate from Python runtime infrastructure.
+
+Terraform manages Databricks resources such as:
+
+```text
+Jobs
+Task dependencies
+Git configuration
+Serverless environment
+Job parameters
+Schedule
+```
+
+Deployment flow:
+
+```text
+GitHub
+↓
+GitHub Actions
+↓
+terraform fmt
+terraform init
+terraform validate
+terraform plan
+↓
+terraform apply
+↓
+Databricks
+```
+
+Terraform state is stored remotely in HCP Terraform.
+
+---
+
+# 13. Scheduling
 
 The Databricks workflow is scheduled through Terraform.
 
@@ -520,564 +912,75 @@ schedule {
 }
 ```
 
-The pipeline therefore runs automatically and refreshes financial data without manual intervention.
+Typical job flow:
+
+```text
+Bronze
+↓
+Silver
+↓
+Gold
+```
+
+Gold performs its core quality validation before publishing the Gold outputs.
 
 ---
 
-# 11. Infrastructure as Code
+# 14. Local Iceberg Experimentation
 
-Databricks infrastructure is managed using Terraform.
+Apache Iceberg remains available as an optional local synchronization/experimentation path.
 
-Terraform manages resources such as:
+It is not part of the primary storage abstraction used by the current Bronze/Silver/Gold pipeline.
 
-```text
-Databricks Jobs
-Job Tasks
-Task Dependencies
-Git Configuration
-Serverless Environment
-Job Parameters
-Job Schedule
-```
-
-Example deployment flow:
+Its purpose is to explore:
 
 ```text
-Terraform Configuration
-        ↓
-Databricks Provider
-        ↓
-Databricks Job
+MERGE behavior
+snapshot history
+table-format semantics
 ```
+
+The primary current local pipeline uses JSON + Parquet; the primary Databricks implementation uses Delta Lake.
 
 ---
 
-# 12. Remote Terraform State
+# 15. Current and Planned Application Architecture
 
-Terraform state is stored remotely using HCP Terraform.
-
-This allows both local development and GitHub Actions to work with the same infrastructure state.
+Implemented:
 
 ```text
-VS Code
-       \
-        → HCP Terraform State
-       /
+SEC ingestion
+Bronze / Silver / Gold
+shared local + Databricks pipeline logic
+data quality
+Delta / Unity Catalog
+Terraform + HCP state
 GitHub Actions
+Power BI reporting
+CLI-based grounded AI assistant
+Databricks-backed financial tool calling
 ```
 
-This avoids keeping infrastructure state only on a developer machine.
-
-Sensitive Terraform state files are excluded from Git:
-
-```gitignore
-*.tfstate
-*.tfstate.*
-terraform.tfvars
-.terraform/
-```
-
----
-
-# 13. GitHub Actions CI/CD
-
-Infrastructure deployment is automated using GitHub Actions.
-
-The CI pipeline performs:
+Next application milestone:
 
 ```text
-terraform fmt
-terraform init
-terraform validate
-terraform plan
+FastAPI
+├── POST /chat
+├── GET /companies/{ticker}
+└── GET /health
 ```
 
-For pushes to the `main` branch, Terraform also executes:
+The API should reuse `chat_service.py` rather than duplicate AI logic.
+
+Later extensions may include:
 
 ```text
-terraform apply
+automatic company onboarding from SEC
+additional deterministic financial tools
+SEC filing text ingestion
+RAG over annual reports / filings
+company comparison workflows
+research-oriented AI features
 ```
 
-The deployment flow is:
-
-```text
-Git Push
-   ↓
-GitHub Actions
-   ↓
-Terraform Init
-   ↓
-Terraform Validate
-   ↓
-Terraform Plan
-   ↓
-Terraform Apply
-   ↓
-Databricks Updated
-```
-
-Pull requests can therefore validate infrastructure changes before deployment while changes merged into `main` can automatically update Databricks.
-
----
-
-## GitHub Secrets
-
-Sensitive credentials are stored using GitHub Actions Secrets rather than being committed to Git.
-
-Examples:
-
-```text
-TF_API_TOKEN
-DATABRICKS_TOKEN
-SEC_NAME
-SEC_EMAIL
-```
-
-Non-sensitive configuration can be stored as GitHub repository variables:
-
-```text
-DATABRICKS_HOST
-ALPHALAKE_ENV
-GITHUB_REPO_URL
-```
-
-Terraform variables are passed using the standard environment-variable convention:
-
-```text
-TF_VAR_<variable_name>
-```
-
----
-
-# 14. Reporting Layer
-
-Power BI is not connected directly to the internal Gold implementation.
-
-A reporting view provides a stable consumer-facing interface:
-
-```sql
-CREATE OR REPLACE VIEW alphalake.gold.v_company_financials_report AS
-SELECT
-    ticker,
-    period_date,
-    revenue,
-    net_income,
-    operating_income,
-    assets,
-    equity,
-    operating_margin,
-    net_profit_margin,
-    return_on_assets,
-    return_on_equity,
-    operating_cash_flow,
-    capex,
-    free_cash_flow
-FROM alphalake.gold.company_financials;
-```
-
-Architecture:
-
-```text
-Gold Table
-    ↓
-Reporting View
-    ↓
-Power BI
-```
-
-This decouples the reporting layer from the internal Gold-table implementation.
-
----
-
-# 15. Power BI Dashboard
-
-The Power BI dashboard provides an interactive company financial overview.
-
-Users can select:
-
-```text
-Ticker
-Period Date
-```
-
-The dashboard currently includes:
-
-### Latest Financial KPIs
-
-- Revenue
-- Net Income
-- Free Cash Flow
-- Assets
-- Equity
-
-The cards use DAX measures that retrieve the latest available reporting period rather than summing historical values.
-
-Example:
-
-```DAX
-Revenue Latest =
-VAR LatestDate =
-    MAX(v_company_financials_report[period_date])
-RETURN
-    CALCULATE(
-        MAX(v_company_financials_report[revenue]),
-        v_company_financials_report[period_date] = LatestDate
-    )
-```
-
----
-
-## Historical Financial Performance
-
-The dashboard visualizes:
-
-```text
-Revenue
-Net Income
-Free Cash Flow
-```
-
-over time.
-
----
-
-## Profitability Analysis
-
-Additional charts show:
-
-```text
-Operating Margin
-Net Profit Margin
-```
-
-over time.
-
----
-
-## Return Metrics
-
-AlphaLake also displays:
-
-```text
-Return on Assets
-Return on Equity
-```
-
-over time.
-
----
-
-# Current Dashboard
-
-The current dashboard contains:
-
-```text
-                     AlphaLake Company Financial Overview
-
-          [ Ticker ]                    [ Period Date ]
-
- Revenue       FCF        Assets        Equity       Net Income
-
-
-                    Financial Performance
-             Revenue / Net Income / Free Cash Flow
-
-
-        Operating Margin             Net Profit Margin
-
-
-                         ROA / ROE
-```
-
-The dashboard allows users to interactively analyze the financial history of individual companies.
-
----
-
-# 16. AlphaLake AI Assistant
-
-AlphaLake now includes a working local AI assistant for structured financial questions. The assistant uses a local Qwen model through Ollama's OpenAI-compatible endpoint.
-
-For company financial questions, the system prompt requires the model to retrieve AlphaLake data through an available financial tool instead of answering from pretrained knowledge.
-
-Current request flow:
-
-```text
-User question
-    ↓
-CLI
-    ↓
-Chat Service
-    ↓
-Ollama / Qwen
-    ↓
-Tool request
-    ↓
-Tool Registry + Executor
-    ↓
-get_financial_report()
-    ↓
-Databricks SQL reporting view
-    ↓
-DataFrame → JSON
-    ↓
-LLM
-    ↓
-Grounded answer
-```
-
-Current AI structure:
-
-```text
-src/ai/
-├── client.py          # creates the LLM client
-├── prompts.py         # AlphaLake system instructions
-├── chat_service.py    # conversation and tool-call orchestration
-├── cli.py             # terminal interface
-└── tools/
-    ├── financials.py  # Databricks-backed financial function
-    ├── registry.py    # tool schemas exposed to the LLM
-    └── executor.py    # tool-name → Python-function dispatch
-```
-
-Example supported question:
-
-```text
-Compare Apple's net profit margin in 2020, 2022, and 2025.
-```
-
-The exact financial values come from AlphaLake's Databricks reporting layer; the LLM is responsible for explaining and comparing the retrieved results.
-
-This follows a deliberate design rule:
-
-```text
-Exact numbers and deterministic calculations → SQL / Python
-Explanation and synthesis                 → LLM
-```
-
-The next application milestone is to expose the reusable chat service through FastAPI. Planned endpoints are:
-
-```text
-POST /chat
-GET  /companies/{ticker}
-GET  /health
-```
-
-FastAPI is not yet part of the implemented architecture.
-
----
-
-# End-to-End Platform
-
-The completed AlphaLake v1 architecture is:
-
-```text
-                        DATA SOURCE
-
-                         SEC EDGAR
-                             │
-                             ▼
-                         BRONZE
-                      Raw SEC JSON
-                             │
-                             ▼
-                         SILVER
-                Normalized Financial Facts
-                             │
-                             ▼
-                          GOLD
-                Analytical Financial Metrics
-                             │
-                             ▼
-                     DATA QUALITY
-                             │
-                             ▼
-                     REPORTING VIEW
-                             │
-                             ▼
-                        POWER BI
-
-
-                    AI RESEARCH PATH
-
-                REPORTING VIEW
-                     │
-                     ▼
-              Financial Tool
-                     │
-                     ▼
-                 Chat Service
-                  ↕       │
-            Ollama/Qwen   ▼
-                         CLI
-
-
-                 INFRASTRUCTURE LAYER
-
-GitHub
-   │
-   ▼
-GitHub Actions
-   │
-   ▼
-Terraform ─────────── HCP Terraform State
-   │
-   ▼
-Databricks
-
-
-                 ORCHESTRATION LAYER
-
-Databricks Workflow
-       │
-       ├── Bronze
-       ├── Silver
-       ├── Gold
-       └── Quality
-       
-       ↓
-
-Scheduled execution
-```
-
----
-
-# Key Engineering Concepts Demonstrated
-
-AlphaLake demonstrates practical experience with:
-
-- REST API ingestion
-- JSON processing
-- PySpark
-- Distributed transformations
-- Medallion architecture
-- Data lakehouse design
-- Delta Lake
-- Apache Iceberg
-- Unity Catalog
-- Data modeling
-- Financial data normalization
-- Incremental processing
-- MERGE operations
-- Change detection
-- Data quality validation
-- Databricks Jobs
-- Workflow dependencies
-- Serverless Databricks
-- Infrastructure as Code
-- Terraform
-- Remote Terraform state
-- CI/CD
-- GitHub Actions
-- Secret management
-- Databricks SQL
-- DAX
-- Power BI
-
----
-
-# Design Principles
-
-AlphaLake follows several engineering principles.
-
-### Separation of concerns
-
-```text
-Ingestion
-Transformation
-Storage
-Quality
-Infrastructure
-Reporting
-```
-
-are implemented as separate responsibilities.
-
-### Storage-independent transformations
-
-Transformation logic does not depend directly on whether the platform runs locally or in Databricks.
-
-### Reproducible infrastructure
-
-Databricks infrastructure is defined as code using Terraform.
-
-### Automated deployment
-
-Infrastructure changes are deployed through GitHub Actions rather than manual configuration.
-
-### Data quality before consumption
-
-Analytical data is validated before being treated as trusted reporting data.
-
-### Stable reporting contract
-
-Power BI consumes a dedicated SQL view instead of depending directly on internal Gold-table implementation details.
-
-### Grounded AI responses
-
-Financial values are retrieved from AlphaLake data through deterministic tools before the LLM explains them. The model is not used as the source of truth for financial figures.
-
-### Interface-independent chat logic
-
-Terminal I/O is isolated in `cli.py`, while reusable conversation and tool-calling logic lives in `chat_service.py`. This prepares the application for a future FastAPI interface without duplicating AI logic.
-
-## Dashboard Preview
-
-![AlphaLake Power BI Dashboard](docs/images/alphalake-powerbi-dashboard.png)
-
----
-
-# Future Improvements
-
-The next planned extensions are:
-
-- FastAPI application layer (`/chat`, `/companies/{ticker}`, `/health`)
-- Per-session conversation state for API clients
-- Automatic onboarding when a requested company is not yet available in AlphaLake
-- Additional deterministic financial tools and company comparisons
-- SEC 10-K / 10-Q text ingestion
-- Chunking, embeddings, semantic retrieval, and RAG over SEC filings
-- Evidence-backed risk and filing analysis
-- Additional companies and financial metrics
-- Market-price data and valuation metrics
-- Monitoring and alerting
-- Additional automated tests and quality checks
-
-The long-term direction is an AI-assisted fundamental research platform. AlphaLake should retrieve evidence, calculate reliable metrics, and explain financial information; it is not intended to predict stock prices or make investment decisions for the user.
-
----
-
-# Project Status
-
-**AlphaLake data platform v1: Complete — AI application layer: In progress**
-
-Current platform capabilities:
-
-```text
-SEC ingestion               ✅
-Bronze layer                ✅
-Silver layer                ✅
-Gold layer                  ✅
-Incremental processing      ✅
-Databricks migration        ✅
-Unity Catalog               ✅
-Databricks Workflow         ✅
-Automated scheduling        ✅
-Data quality                ✅
-Terraform IaC               ✅
-HCP remote state            ✅
-GitHub Actions CI/CD        ✅
-Reporting SQL view          ✅
-Power BI dashboard          ✅
-Local Ollama / Qwen client  ✅
-Financial tool calling      ✅
-Databricks-grounded Q&A     ✅
-Modular AI package          ✅
-FastAPI application         🚧 Planned next
-SEC filing RAG              🚧 Planned later
-```
-
----
-
-# Author
-
-Built as a hands-on Data Engineering, Lakehouse, and AI-assisted financial research project demonstrating ingestion, transformation, deployment, automation, analytics, grounded LLM tool calling, and the evolution of a data platform into an application.
+AlphaLake is intended to support evidence-based financial research, not to provide buy/sell recommendations.

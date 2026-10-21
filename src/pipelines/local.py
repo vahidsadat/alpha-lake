@@ -21,7 +21,7 @@ def main():
     run_bronze(tickers, name, email, destination)
     run_silver(spark,tickers,destination)
     silver_df = read_silver(spark=spark, destination=destination)
-    run_gold(silver_df, "local")
+    run_gold(silver_df, destination)
 
 if __name__ == "__main__":
     main()
