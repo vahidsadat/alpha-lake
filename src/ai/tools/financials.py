@@ -45,3 +45,35 @@ def get_financial_report(ticker : str, years : list[int]) -> pd.DataFrame:
             rows = cursor.fetchall()
 
     return pd.DataFrame(rows, columns=columns)
+
+def get_financial_report_databricks(ticker : str) -> pd.DataFrame:
+
+    ticker = ticker.upper()
+    parameters = {"ticker": ticker}
+
+
+    query =f"""
+                    SELECT ticker, period_date, revenue, net_income, net_profit_margin FROM alphalake.gold.v_company_financials_report
+                    WHERE ticker = :ticker
+                    ORDER BY period_date LIMIT 100
+                    """
+    with sql.connect(
+            server_hostname = os.getenv("DATABRICKS_HOST"),
+            http_path = os.getenv("HTTP_PATH"),
+            access_token = os.getenv("DATABRICKS_ACCESS_TOKEN")
+        ) as connection:
+    
+        with connection.cursor() as cursor:
+            cursor.execute(
+                query,
+                parameters = parameters
+            )
+
+            columns = [
+                column[0]
+                for column in cursor.description
+            ]
+
+            rows = cursor.fetchall()
+
+    return pd.DataFrame(rows, columns=columns)

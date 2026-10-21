@@ -12,7 +12,8 @@ dependencies = [
     "databricks-sdk",
     "openai",
     "databricks-sql-connector",
-    "fastapi"
+    "fastapi",
+    "uvicorn"
 ]
 
 [dependency-groups]
