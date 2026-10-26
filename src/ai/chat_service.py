@@ -1,6 +1,5 @@
 from .tools.registry import TOOLS
 from .tools.executor import execute_tool
-from .prompts import SYSTEM_PROMPT
 from .client import create_llm_client
 
 import json
@@ -9,10 +8,8 @@ client = create_llm_client()
 
 
 
-def process_message(input_prompt:str):
-    messages = [
-            {"role": "system", "content" : SYSTEM_PROMPT}
-        ]
+def process_message(input_prompt:str, messages: list[dict]):
+    
 
     messages.append({"role": "user", "content": input_prompt})
     analysis = client.chat.completions.create(

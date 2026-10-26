@@ -8,3 +8,10 @@ Requires-Dist: python-dotenv
 Requires-Dist: requests
 Requires-Dist: pyspark==4.1.3
 Requires-Dist: pandas
+Requires-Dist: databricks-sdk
+Requires-Dist: openai
+Requires-Dist: databricks-sql-connector
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: websockets
+Requires-Dist: fastapi[standard]

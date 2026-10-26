@@ -3,3 +3,10 @@ python-dotenv
 requests
 pyspark==4.1.3
 pandas
+databricks-sdk
+openai
+databricks-sql-connector
+fastapi
+uvicorn
+websockets
+fastapi[standard]

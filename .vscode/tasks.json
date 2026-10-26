@@ -26,6 +26,24 @@
             ]
         },
         {
+            "label": "Run FastAPI",
+            "type": "shell",
+            "command": "uvicorn",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "args": [
+                "src.api.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+            "problemMatcher" : []
+
+        },
+        {
             "label": "Run Terraform Init",
             "type": "shell",
             "command": "terraform",

@@ -13,7 +13,10 @@ dependencies = [
     "openai",
     "databricks-sql-connector",
     "fastapi",
-    "uvicorn"
+    "uvicorn",
+    "websockets",
+    "fastapi[standard]",
+    "websocket-client"
 ]
 
 [dependency-groups]
