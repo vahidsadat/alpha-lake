@@ -9,7 +9,6 @@ const Input = styled.input`
     padding: 0.2rem;
     font-size: large;
 `;
-const socket = createChatSocket();
 interface AIConversationProps {
   session_id: string;
 }
@@ -78,13 +77,6 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
 
       setMessage("");
       };
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        setMessages((prev) => [
-            ...prev,
-            { role: "assistant", content: data.answer}
-        ]);
-    };
     return(
     <main>
     <div className="w-full">
