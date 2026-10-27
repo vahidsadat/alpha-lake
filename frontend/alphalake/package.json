@@ -17,6 +17,7 @@
     "postcss": "^8.5.31",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
     "styled-components": "^6.4.2"
   },
   "devDependencies": {

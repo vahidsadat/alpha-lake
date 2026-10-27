@@ -3,6 +3,7 @@ import styled from "@emotion/styled";
 import { useEffect,useRef,useState } from "react";
 import Button from '@mui/material/Button';
 import SendIcon from '@mui/icons-material/Send';
+import ReactMarkDown from "react-markdown"
 
 const Input = styled.input`
     width: 100%;
@@ -98,7 +99,7 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
                 <strong>
                     {msg.role ==="user" ? "You" : "AlphaLake"}:
                 </strong>
-                <p>{msg.content}</p>
+                <ReactMarkDown>{msg.content}</ReactMarkDown>
             </div>
         ))}
     </div>
