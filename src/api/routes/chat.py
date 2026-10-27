@@ -2,7 +2,7 @@ from fastapi import APIRouter , WebSocket, WebSocketDisconnect, HTTPException, D
 from pydantic import BaseModel
 from uuid import UUID
 from typing import List, Dict
-from ...ai.chat_service import process_message
+from src.ai.chat_service import process_message
 
 
 router = APIRouter()

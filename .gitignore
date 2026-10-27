@@ -16,3 +16,4 @@ data/gold/
 terraform.tfvars
 Databricks credentials/tokens
 node_modules
+.dockerignore

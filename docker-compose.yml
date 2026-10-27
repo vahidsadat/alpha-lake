@@ -1,0 +1,48 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: src/Dockerfile
+    env_file:
+      - .env
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+    ports:
+      - "8000:8000"
+  
+  frontend:
+    build:
+      context: . 
+      dockerfile: frontend/alphalake/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+     - "11435:11434"
+    volumes:
+     - ollama:/root/.ollama
+    restart: unless-stopped
+  
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+
+    entrypoint: >
+      sh -c "
+      sleep 5 &&
+      ollama pull qwen3:4b-instruct
+      "
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ollama:/root/.ollama
+    restart: "no"
+
+volumes:
+  ollama: {}

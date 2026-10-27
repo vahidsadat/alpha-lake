@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import json
-from ...ai.tools.financials import get_financial_report_databricks
+from src.ai.tools.financials import get_financial_report_databricks
 
 router = APIRouter()
 
