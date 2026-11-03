@@ -56,7 +56,9 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
   }, []);
     const handleSend = () => {
         console.log("SEND BUTTON CLICKED");
-      if (!message.trim()) return;  
+      if (!message.trim()){
+        console.log("message has problem")
+         return;}  
 
       const socket = socketRef.current;
       console.log("Socket state:", socket?.readyState);
@@ -87,6 +89,7 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
         className="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {if (e.key === "Enter"){handleSend()}}}
       />
         <Button variant="contained" endIcon={<SendIcon />}
         onClick={handleSend}>

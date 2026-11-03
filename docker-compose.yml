@@ -61,6 +61,15 @@ services:
     volumes:
       - ollama:/root/.ollama
     restart: "no"
-
+  postgresql:
+    image: postgres
+    container_name: alphalake
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB="alphalake"
+    
 volumes:
   ollama: {}

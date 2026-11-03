@@ -16,7 +16,9 @@ dependencies = [
     "uvicorn",
     "websockets",
     "fastapi[standard]",
-    "websocket-client"
+    "websocket-client",
+    "sqlalchemy",
+    "psycopg2-binary"
 ]
 
 [dependency-groups]
