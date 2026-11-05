@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routes.health import router as health_router
 from .routes.companies import router as companies_router
 from .routes.chat import router as chat_router
+from .routes.sidebar import router as sidebar_router
 
 app = FastAPI(
     title= "alphalake",
@@ -11,7 +12,8 @@ app = FastAPI(
 
 origins = [
     "http://localhost",
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "http://localhost:3000"
 ]
 
 app.add_middleware(
@@ -25,3 +27,4 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(companies_router)
 app.include_router(chat_router)
+app.include_router(sidebar_router)

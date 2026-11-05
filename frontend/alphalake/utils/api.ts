@@ -16,10 +16,19 @@ export function createChatSocket(){
 
 export async function getAllConversations(){
   try{
-    const response = await fetch(`/v1/conversations`, { method: 'GET'})
+    const response = await fetch(`${API_BASE_URL}/v1/conversations`, { method: 'GET'})
     return response
   }catch(error){
     console.log("Transition error", error);
   }
   
+}
+
+export async function getConversation(session_id:string){
+  try{
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${session_id}/messages`, { method: 'GET'})
+    return response
+  }catch(error){
+    console.log("Transition error", error);
+  }
 }

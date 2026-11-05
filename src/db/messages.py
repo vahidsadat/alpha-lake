@@ -72,4 +72,18 @@ class MessageRepository:
                                      "content":row["content"]})
         return conversation
 
-            
+    def get_all_sessionids(self)->list[UUID]:
+        select_query = """
+                SELECT DISTINCT session_id
+                FROM alphalake.messages
+            """       
+        with self.client.engine.begin() as connection:
+            result = connection.execute(text(select_query)).mappings().all()
+            return [row["session_id"] for row in result]
+    def delete_messages(self, session_id: UUID):
+        delete_query = """
+            DELETE FROM alphalake.messages
+            WHERE session_id = :session_id
+        """
+        with self.client.engine.begin() as connection:
+            connection.execute(text(delete_query), {"session_id": session_id})

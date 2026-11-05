@@ -4,10 +4,10 @@ import AIConversation from "../component/chatbox";
 import { SideBar } from "../component/sidebar";
 import { useState } from "react";
 export default function Dashboard(){
-  const [message, setMessage] = useState<string>("");
-  const [sessionId] = useState<string>(() => crypto.randomUUID());
-
- 
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
+  const handleSelectConversation = (desiredSessionId: string) => {
+    setSessionId(desiredSessionId);
+  };
   return(
     <main>
       <CssBaseline/>
@@ -16,7 +16,7 @@ export default function Dashboard(){
       </div>
       <div className='grid grid-cols-[250px_1fr] gap-4'>
         <div >
-            <SideBar />
+            <SideBar onSelect={handleSelectConversation}/>
         </div>
         <div>
           <AIConversation

@@ -1,10 +1,12 @@
 from fastapi import APIRouter , WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
-from src.ai.chat_service import process_message
+import asyncio
+from src.ai.chat_service import process_message, generate_title
 from src.db.connection import PostgresClient
 from src.db.repositories import ConversationRepository
 from src.db.messages import MessageRepository
+
 
 
 router = APIRouter()
@@ -29,14 +31,18 @@ def get_psql_client():
 client = get_psql_client()
 conversation = ConversationRepository(client)
 messages = MessageRepository(client=client)
+# list_of_session_ids = messages.get_all_sessionids()
 conversation.create_table()
 messages.create_table()
+# for session_id in list_of_session_ids:
+#     conversation.add_title_to_conversations(session_id, generate_title(messages.get_messages(session_id)))
+
 @router.post("/v1/chat", response_model=ChatResponse)
 async def chat_process_message(request:ChatRequest):
-    conversation.add_conversation(request.session_id)
     
     history = messages.get_messages(request.session_id)
-    
+    title = generate_title(history)
+    conversation.create_if_missing(request.session_id, title)
     answer =  process_message(request.message, history)
     if not answer:
         raise HTTPException(status_code=503, detail="AI Assisstant unavailable")
@@ -52,24 +58,31 @@ async def websocket_chat(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             request = WebSocketRequest(**data)
-            conversation.add_conversation(request.session_id)
+
             history = messages.get_messages(request.session_id)
-            answer = process_message(request.message, history)
+            answer = await asyncio.to_thread(process_message, request.message, history)
+
             if not answer:
-                await websocket.send_json(
-                    {
-                        "error" : "AI Assisstant unavailable"
-                    }
-                )
+                await websocket.send_json({"error": "AI Assistant unavailable"})
                 continue
-            await websocket.send_json({
-                "answer" : answer
-            })
-            messages.add_messages(request.session_id,
-                                  [
-                                    {"role": "user", "content": request.message},
-                                    {"role": "assistant", "content": answer}
-                                  ])
+
+            # 1. parent row first (no-op if it already exists)
+            conversation.create_if_missing(request.session_id)
+
+            # 2. children after the parent exists
+            new_messages = [
+                {"role": "user", "content": request.message},
+                {"role": "assistant", "content": answer},
+            ]
+            messages.add_messages(request.session_id, new_messages)
+
+            # 3. reply right away, don't make the user wait for the title
+            await websocket.send_json({"answer": answer})
+
+            # 4. title only once, after the first exchange
+            if not conversation.has_title(request.session_id):
+                title = await asyncio.to_thread(generate_title, new_messages)
+                conversation.set_title(request.session_id, title)
 
     except WebSocketDisconnect:
         pass

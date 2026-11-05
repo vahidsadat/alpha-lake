@@ -66,7 +66,6 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
         console.error("WebSocket is not open");
       return;
       }
-      console.log("Sending:", message);
       setMessages((prev) => [
             ...prev,
             { role: "user", content: message}
@@ -81,11 +80,11 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
       setMessage("");
       };
     return(
-    <main>
+    <div>
     <div className="w-full">
       <Input 
         type="text"
-        placeholder="Search name..."
+        placeholder="Ask a question..."
         className="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -96,7 +95,7 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
         Send
         </Button>
     </div>
-    <div className="w-full min-h-[300px] border rounded-lg p-4 overflow-y-auto">
+    <div className="w-full">
         {messages.map((msg, index) => (
             <div key={index}>
                 <strong>
@@ -106,7 +105,7 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
             </div>
         ))}
     </div>
-    </main>
+    </div>
     );
 }
 
