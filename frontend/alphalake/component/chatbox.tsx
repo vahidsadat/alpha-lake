@@ -4,6 +4,7 @@ import { useEffect,useRef,useState } from "react";
 import Button from '@mui/material/Button';
 import SendIcon from '@mui/icons-material/Send';
 import ReactMarkDown from "react-markdown"
+import { getConversation } from "@/utils/api";
 
 const Input = styled.input`
     width: 100%;
@@ -54,6 +55,17 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
       socket.close();
     };
   }, []);
+  useEffect(() => {
+    console.log("Current session_id:", session_id);
+    const fetchmessages = async () => {
+    const response = await getConversation(session_id);
+    if (response) {
+        const data = await response.json();
+        console.log("Fetched messages:", data);
+        setMessages(data);
+    }}
+    fetchmessages();
+  }, [session_id]);
     const handleSend = () => {
         console.log("SEND BUTTON CLICKED");
       if (!message.trim()){

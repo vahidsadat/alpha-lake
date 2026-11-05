@@ -32,3 +32,27 @@ export async function getConversation(session_id:string){
     console.log("Transition error", error);
   }
 }
+
+export async function deleteConversation(session_id:string){
+  try{
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${session_id}`, { method: 'DELETE'})
+    return response
+  }catch(error){
+    console.log("Transition error", error);
+  }
+}
+
+export async function renameConversation(session_id:string, newTitle:string){
+  try{
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${session_id}/title`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: newTitle }),
+    });
+    return response;
+  }catch(error){
+    console.log("Transition error", error);
+  }
+}
