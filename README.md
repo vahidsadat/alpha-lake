@@ -1,95 +1,167 @@
+<div align="center">
+
 # AlphaLake
 
-AlphaLake is an AI-assisted financial research platform built as a hands-on engineering project across data engineering, backend development, cloud infrastructure, AI, and frontend product development.
+### AI-assisted financial research built on a real data platform
 
-The project currently combines SEC financial data, Databricks analytics, FastAPI, PostgreSQL, a local Ollama LLM, Next.js, Docker Compose, and Terraform.
+**SEC data → Databricks lakehouse → FastAPI → PostgreSQL → Ollama → Next.js**
 
-The goal is not to collect technologies. AlphaLake is being developed feature by feature, with each new component added when it solves a concrete engineering or product problem.
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Databricks](https://img.shields.io/badge/Databricks-Lakehouse-FF3621?logo=databricks&logoColor=white)](https://www.databricks.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Operational%20State-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-Frontend-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io/)
 
-## Current Status
+AlphaLake is a hands-on financial research platform that connects **data engineering, backend engineering, cloud infrastructure, AI, and product development** in one system.
 
-AlphaLake currently supports:
+Instead of asking an LLM to guess financial facts, AlphaLake gives the model tools backed by structured SEC-derived data and a Databricks analytical layer.
 
-- SEC Company Facts ingestion
-- Bronze / Silver / Gold transformations
-- PySpark + Delta Lake processing in Databricks
-- financial data quality checks
-- Gold financial and derived metrics
-- Databricks Jobs managed with Terraform
-- FastAPI backend
-- REST APIs
-- WebSocket chat
-- local LLM inference with Ollama
-- `qwen3:4b-instruct`
-- AI tool calling against Databricks financial data
-- Next.js chat interface
-- PostgreSQL-backed conversation persistence
-- conversation history loading
-- conversation sidebar
-- new chats with generated UUID session IDs
-- persisted conversation titles
-- rename conversation
-- delete conversation
-- hover action menu with click-away behavior
-- Docker Compose integration for frontend, backend and Ollama
-- SEC ticker → CIK resolution
+</div>
 
-The next main product feature is a company watchlist.
+---
+
+<!--
+Add a project banner here when ready:
+
+<p align="center">
+  <img src="docs/assets/alphalake-banner.png" alt="AlphaLake banner" width="100%" />
+</p>
+-->
+
+## Why AlphaLake?
+
+A financial assistant is only useful when its answers are grounded in reliable data.
+
+AlphaLake explores a simple idea:
+
+> **What if an AI financial assistant sat on top of a proper data platform instead of relying on model memory?**
+
+The project therefore separates responsibilities clearly:
+
+- **SEC** provides the source financial data.
+- **Databricks** processes and serves analytical financial metrics.
+- **PostgreSQL** stores operational product state such as conversations and messages.
+- **FastAPI** connects the product, AI, and data layers.
+- **Ollama** provides local LLM inference and tool calling.
+- **Next.js** provides the interactive research experience.
+
+The result is not just a chatbot and not just a data pipeline. It is an evolving **full-stack financial research system**.
+
+---
+
+## Demo
+
+<!--
+Recommended asset:
+docs/assets/alphalake-demo.gif
+
+Record a 15–25 second GIF showing:
+1. Open AlphaLake.
+2. Ask: "What was Apple's revenue in 2024?"
+3. Show the grounded answer.
+4. Open an older conversation from the sidebar.
+5. Rename a conversation.
+6. Create a new chat.
+
+Then uncomment:
+
+<p align="center">
+  <img src="docs/assets/alphalake-demo.gif" alt="AlphaLake demo" width="900" />
+</p>
+-->
+
+**Current end-to-end flow:**
+
+```text
+User asks a financial question
+        ↓
+Next.js chat interface
+        ↓
+FastAPI WebSocket
+        ↓
+Local LLM decides whether a tool is required
+        ↓
+Financial tool queries Databricks Gold data
+        ↓
+Structured result returns to the LLM
+        ↓
+Grounded answer is shown to the user
+        ↓
+Conversation is persisted in PostgreSQL
+```
+
+---
 
 ## Architecture
 
-```text
-User
- │
- ▼
-Next.js
- │
- ├── REST
- └── WebSocket
- │
- ▼
-FastAPI
- ├──────────────► PostgreSQL
- │                conversations
- │                messages
- │                watchlists (next)
- │
- ├──────────────► Ollama
- │                qwen3:4b-instruct
- │
- └──────────────► Databricks
-                  Bronze / Silver / Gold
-                  SEC financial analytics
+```mermaid
+flowchart TB
+    U[User] --> FE[Next.js Frontend]
+
+    FE -->|REST| API[FastAPI Backend]
+    FE -->|WebSocket| API
+
+    API --> PG[(PostgreSQL)]
+    API --> LLM[Ollama\nqwen3:4b-instruct]
+    API --> DBX[Databricks]
+
+    DBX --> BR[Bronze]
+    BR --> SI[Silver]
+    SI --> GO[Gold]
+
+    SEC[SEC Company Facts / EDGAR] --> BR
+
+    PG -. operational state .-> API
+    GO -. financial tools .-> API
+    LLM -. tool calling .-> API
 ```
 
-For a more detailed breakdown, see `architecture.md`.
+### Architectural split
 
-## Data Pipeline
+| Layer | Responsibility |
+|---|---|
+| **Next.js** | Chat UI, conversation sidebar, user interactions |
+| **FastAPI** | REST APIs, WebSockets, orchestration, AI/data integration |
+| **PostgreSQL** | Conversations, messages, titles, future watchlists/users |
+| **Ollama** | Local LLM inference and tool selection |
+| **Databricks** | Analytical financial data and derived metrics |
+| **SEC** | Source company facts, ticker/CIK reference data |
+| **Terraform** | Databricks infrastructure and job configuration |
+| **Docker Compose** | Local integration environment |
 
-AlphaLake uses a medallion-style analytical pipeline.
+For a deeper explanation, see [`architecture.md`](architecture.md).
 
-```text
-SEC
- │
- ▼
-Bronze
- │
- ▼
-Silver
- │
- ▼
-Gold Core
- │
- ├── company financials
- │
- ▼
-Gold Derived
- ├── growth metrics
- ├── rolling metrics
- └── cash-flow-quality metrics
+---
+
+## Data Engineering Pipeline
+
+AlphaLake uses a medallion-style architecture:
+
+```mermaid
+flowchart LR
+    SEC[SEC Source Data] --> B[Bronze]
+    B --> S[Silver]
+    S --> C[Gold Core]
+    C --> G[Growth Metrics]
+    C --> R[Rolling Metrics]
+    C --> Q[Cash Flow Quality]
 ```
 
-Current Gold outputs:
+### Bronze
+
+Raw or minimally processed SEC data is ingested and preserved for downstream processing.
+
+### Silver
+
+Financial facts are normalized, schema-controlled, validated, and transformed into analysis-ready structures.
+
+### Gold
+
+Gold contains company-level financial outputs and derived analytical metrics.
+
+Current Gold datasets include:
 
 ```text
 alphalake.gold.company_financials
@@ -98,172 +170,179 @@ alphalake.gold.rolling_metrics
 alphalake.gold.cash_flow_quality
 ```
 
-The AI layer can query:
+The AI layer queries the reporting view:
 
 ```text
 alphalake.gold.v_company_financials_report
 ```
 
-## Current AI Flow
+The core Gold financial table uses change-aware merge logic in Databricks, while current derived datasets are rebuilt from the relevant Silver input.
 
-AlphaLake uses a local Ollama model through an OpenAI-compatible client.
+---
 
-```text
-User question
-     │
-     ▼
-qwen3:4b-instruct
-     │
-     ├── normal response
-     └── tool call
-           │
-           ▼
-      backend AI tool
-           │
-           ▼
-       Databricks
-           │
-           ▼
-   financial result
-           │
-           ▼
-     assistant answer
+## AI Tool Calling
+
+The LLM is not treated as the financial database.
+
+When a question requires structured financial information, the model can call an AlphaLake financial tool.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Next.js
+    participant API as FastAPI
+    participant LLM as Ollama
+    participant DBX as Databricks
+
+    U->>FE: Ask financial question
+    FE->>API: WebSocket message
+    API->>LLM: Question + conversation history
+    LLM-->>API: Financial tool call
+    API->>DBX: Query Gold reporting data
+    DBX-->>API: Structured financial result
+    API->>LLM: Tool result
+    LLM-->>API: Grounded response
+    API-->>FE: Answer
+    FE-->>U: Render response
 ```
 
-The model is expected to treat tool-returned financial data as authoritative.
+Current local model:
+
+```text
+qwen3:4b-instruct
+```
+
+A core design goal is to keep financial answers tied to tool-returned data and minimize unsupported model speculation.
+
+---
 
 ## Conversation System
 
-Conversation history is persisted in PostgreSQL.
+AlphaLake now has persistent conversation history rather than an in-memory-only chat session.
 
-```text
-message arrives
-     │
-     ▼
-ensure conversation exists
-     │
-     ▼
-load prior history
-     │
-     ▼
-process with AI
-     │
-     ▼
-store user + assistant messages
+### Implemented
+
+- Create a new chat with a new UUID session ID
+- Persist user and assistant messages in PostgreSQL
+- Load previous messages when a conversation is selected
+- List conversations in the sidebar
+- Generate/store conversation titles
+- Rename conversations
+- Delete conversations
+- Show a three-dot action menu on hover
+- Close the action menu when clicking outside
+- Keep frontend state synchronized with conversation actions
+
+```mermaid
+flowchart LR
+    SB[Sidebar] -->|select session| D[Dashboard state]
+    D -->|sessionId| C[Chat component]
+    C -->|load messages| API[FastAPI]
+    API --> PG[(PostgreSQL)]
+    PG --> API
+    API --> C
 ```
 
-The frontend sidebar can:
+<!--
+Recommended screenshot:
+docs/assets/conversation-sidebar.png
 
-- list conversations
-- select a conversation
-- load its messages
-- create a new chat
-- rename a conversation
-- delete a conversation
+<p align="center">
+  <img src="docs/assets/conversation-sidebar.png" alt="AlphaLake conversation sidebar" width="850" />
+</p>
+-->
 
-The active session ID is owned by the page/dashboard component and shared with the sidebar and chat component through React props and state.
+---
 
-## Operational vs Analytical Storage
+## Operational Data vs Analytical Data
 
-### PostgreSQL
+One of the important architectural decisions in AlphaLake is **not** to use one database for everything.
 
-PostgreSQL stores application state:
+### PostgreSQL — operational state
+
+PostgreSQL answers questions such as:
+
+- Which conversations exist?
+- What messages belong to a conversation?
+- What is the current conversation title?
+- Which companies will a user eventually watch?
+
+### Databricks — analytical state
+
+Databricks answers questions such as:
+
+- What was a company's annual revenue?
+- How did net income change across years?
+- What are the derived growth metrics?
+- What is the historical cash-flow quality?
 
 ```text
-conversations
-messages
-conversation titles
-watchlists (next)
-users (future)
+PostgreSQL = product/application memory
+Databricks = financial analytical memory
 ```
 
-### Databricks
+---
 
-Databricks stores analytical financial data:
+## SEC Company Reference
 
-```text
-SEC facts
-historical financial data
-normalized metrics
-derived metrics
-aggregations
-reporting views
-```
-
-## SEC Company Data
-
-AlphaLake already contains code using:
+AlphaLake already uses the SEC ticker dataset:
 
 ```text
 https://www.sec.gov/files/company_tickers.json
 ```
 
-The current helper can resolve:
+The current helper supports:
 
 ```text
 ticker → CIK
 ```
 
-This dataset will also support the upcoming company-search/watchlist feature.
+This becomes the foundation for a searchable company universe and the upcoming Watchlist feature.
 
-The frontend should not contain a hardcoded master list of companies. The backend/data layer should expose searchable company metadata derived from SEC reference data.
-
-## Next Feature: Watchlist
-
-Initial idea:
+Instead of hardcoding companies in the frontend, the intended flow is:
 
 ```text
-User opens Watchlist
-     │
-     ▼
-searches or chooses company
-     │
-     ▼
-frontend sends ticker / CIK
-     │
-     ▼
-FastAPI
-     │
-     ▼
-PostgreSQL
+SEC ticker reference
+       ↓
+backend/data layer
+       ↓
+company search
+       ↓
+user selects ticker
+       ↓
+watchlist
 ```
 
-PostgreSQL will store which companies are watched. Databricks remains responsible for financial analytics for those companies.
-
-Later this can support:
-
-- company detail pages
-- filing alerts
-- financial summaries
-- personalized dashboards
-- earnings/filing workflows
+---
 
 ## Tech Stack
 
 ### Data Engineering
+
 - Python
 - PySpark
 - Delta Lake
 - Databricks
-- SEC EDGAR / Company Facts data
+- SEC Company Facts / EDGAR data
+- Data-quality validation
 
 ### Backend
+
 - FastAPI
 - Pydantic
 - SQLAlchemy
-- REST
+- REST APIs
 - WebSockets
 
-### Operational Database
-- PostgreSQL
-
 ### AI
+
 - Ollama
 - `qwen3:4b-instruct`
 - OpenAI-compatible Python client
-- tool calling
+- Tool calling
 
 ### Frontend
+
 - Next.js
 - React
 - TypeScript
@@ -271,132 +350,199 @@ Later this can support:
 - Tailwind CSS
 - React Markdown
 
+### Storage
+
+- PostgreSQL — operational state
+- Databricks / Delta Lake — analytical data
+
 ### Infrastructure
+
 - Docker
 - Docker Compose
 - Terraform
 - GitHub Actions
 
-## Docker
+---
 
-Local integration stack:
+## Dockerized Local Stack
 
-```text
-frontend
-backend
-ollama
-ollama-pull
-```
-
-Databricks stays external.
-
-Typical local ports:
+The current local integration environment includes:
 
 ```text
-Next.js      3000
-FastAPI      8000
-PostgreSQL   5432
-Ollama       11434
+Docker Compose
+├── frontend
+├── backend
+├── ollama
+└── ollama-pull
 ```
 
-Inside Docker Compose, services communicate using service names rather than localhost, for example:
+Databricks remains an external analytical platform.
 
-```text
-http://ollama:11434
-```
+Typical development ports:
 
-## Terraform
+| Service | Port |
+|---|---:|
+| Next.js | `3000` |
+| FastAPI | `8000` |
+| PostgreSQL | `5432` |
+| Ollama | `11434` |
 
-Terraform configuration lives under:
+Inside Compose, the backend communicates with Ollama through the Docker service name rather than `localhost`.
 
-```text
-infrastructure/terraform/
-```
-
-It is used for Databricks infrastructure and job configuration.
+---
 
 ## Project Structure
 
 ```text
-src/
-├── ai/
-├── api/
-├── db/
-├── ingestion/
-├── storage/
-├── transformations/
-├── pipelines/
-├── runtime/
-└── quality/
-
-frontend/
-└── alphalake/
-
-infrastructure/
-└── terraform/
+.
+├── src/
+│   ├── ai/
+│   ├── api/
+│   ├── db/
+│   ├── ingestion/
+│   ├── pipelines/
+│   ├── quality/
+│   ├── runtime/
+│   ├── storage/
+│   └── transformations/
+│
+├── frontend/
+│   └── alphalake/
+│
+├── infrastructure/
+│   └── terraform/
+│
+└── architecture.md
 ```
 
-## Development Principles
+The exact file structure evolves with the project, but the main separation of responsibilities is intentional.
 
-- implement real product flows rather than résumé-only features
-- keep backend and data engineering tightly connected
-- separate OLTP and OLAP concerns
-- prefer reusable pipeline functions
-- use AI tools for grounded financial answers
-- persist important application state
-- keep local development possible
-- add infrastructure only when there is a real engineering need
-- learn through implementation, debugging, and iteration
+---
 
-## Roadmap
+## What I Am Building Next
 
-### Near term
+### Watchlist
+
+The next product feature is a personalized company watchlist.
+
+Planned first version:
+
+```text
+User opens Watchlist
+        ↓
+searches SEC-backed company reference
+        ↓
+selects a company
+        ↓
+FastAPI stores watchlist state in PostgreSQL
+        ↓
+AlphaLake can use Databricks data for that company
+```
+
+### Planned roadmap
 
 - [x] SEC financial ingestion
 - [x] Bronze / Silver / Gold pipeline
 - [x] Databricks analytical layer
 - [x] Terraform-managed Databricks jobs
-- [x] AI financial tool calling
 - [x] FastAPI backend
+- [x] AI financial tool calling
 - [x] WebSocket chat
 - [x] Next.js chat UI
 - [x] Docker Compose integration
 - [x] PostgreSQL conversation persistence
-- [x] conversation sidebar
-- [x] rename / delete conversations
-- [ ] company reference/search layer
-- [ ] watchlist
-- [ ] company detail page
-
-### Later
-
-- [ ] authentication and users
+- [x] Conversation history sidebar
+- [x] Conversation rename/delete
+- [x] SEC ticker → CIK lookup
+- [ ] Searchable company reference
+- [ ] Watchlist
+- [ ] Company detail page
+- [ ] Authentication and users
 - [ ] SEC filing ingestion
 - [ ] RAG over 10-K / 10-Q filings
-- [ ] citations in AI answers
-- [ ] background jobs
-- [ ] filing / earnings alerts
+- [ ] Source citations in AI answers
+- [ ] Background jobs / alerts
 
-### Only when justified
+### Technologies intentionally deferred
+
+Some technologies are deliberately **not** being added until the architecture needs them:
 
 - Redis
 - Kafka
 - Kubernetes
 - additional analytical warehouses such as Snowflake
 
+The goal is to solve real engineering problems, not collect infrastructure keywords.
+
+---
+
+## Engineering Principles
+
+AlphaLake is being developed around a few principles:
+
+1. **Build vertical slices.** A feature should connect frontend, backend, persistence, and data when appropriate.
+2. **Separate OLTP and OLAP concerns.** Product state and analytical data have different workloads.
+3. **Ground AI in tools.** Financial facts should come from structured data, not model memory.
+4. **Keep transformations reusable.** DataFrame transformations should remain separate from orchestration and storage.
+5. **Add complexity only when justified.** New infrastructure must solve a real problem.
+6. **Learn through implementation.** The project is intentionally built through design, coding, debugging, refactoring, and iteration.
+
+---
+
+## Visual Assets Recommended for This README
+
+For the strongest GitHub presentation, add these files under `docs/assets/`:
+
+```text
+docs/assets/
+├── alphalake-banner.png
+├── alphalake-demo.gif
+├── conversation-sidebar.png
+├── financial-answer.png
+└── databricks-pipeline.png
+```
+
+### Best GIF to record
+
+A single 15–25 second GIF can communicate most of the project:
+
+```text
+1. Open AlphaLake
+2. Ask "What was Apple's revenue in 2024?"
+3. Show the answer
+4. Switch to an existing conversation
+5. Rename it
+6. Create a new chat
+```
+
+Keep the GIF narrow enough to read comfortably on GitHub and avoid recording your whole desktop.
+
+---
+
 ## Project Direction
 
 AlphaLake is evolving toward a small but realistic financial research product where:
 
 ```text
-data engineering
-+ backend engineering
-+ operational data
-+ analytical data
-+ AI
-+ frontend product design
+Data Engineering
+      +
+Backend Engineering
+      +
+Cloud / Infrastructure
+      +
+AI Tooling
+      +
+Frontend Product Development
+      =
+AlphaLake
 ```
 
-work together as one system.
+The long-term direction is to make financial research more interactive while keeping the underlying data flow explicit, testable, and grounded.
 
-The project is intentionally being developed incrementally so that each architectural decision is connected to an actual requirement.
+---
+
+<div align="center">
+
+**Built as an engineering project to understand how modern data platforms, backend systems, and AI applications fit together.**
+
+</div>
