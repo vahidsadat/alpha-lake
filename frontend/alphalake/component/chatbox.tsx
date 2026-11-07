@@ -20,6 +20,7 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
     >([]);
 
     const socketRef = useRef<WebSocket | null>(null);
+    const bottomRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
     const socket = createChatSocket();
 
@@ -66,6 +67,9 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
     }}
     fetchmessages();
   }, [session_id]);
+  useEffect(() => {
+  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [messages]);
     const handleSend = () => {
         console.log("SEND BUTTON CLICKED");
       if (!message.trim()){
@@ -92,7 +96,18 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
       setMessage("");
       };
     return(
-    <div>
+    <div className="flex flex-col gap-4 h-full min-h-0">
+    <div className="flex-1 min-h-0 overflow-y-auto w-full">
+        {messages.map((msg, index) => (
+            <div key={index}>
+                <strong>
+                    {msg.role ==="user" ? "You" : "AlphaLake"}:
+                </strong>
+                <ReactMarkDown>{msg.content}</ReactMarkDown>
+            </div>
+        ))}
+        <div ref={bottomRef} />
+    </div>
     <div className="w-full">
       <Input 
         type="text"
@@ -106,16 +121,6 @@ const AIConversation = ({ session_id}: AIConversationProps ) => {
         onClick={handleSend}>
         Send
         </Button>
-    </div>
-    <div className="w-full">
-        {messages.map((msg, index) => (
-            <div key={index}>
-                <strong>
-                    {msg.role ==="user" ? "You" : "AlphaLake"}:
-                </strong>
-                <ReactMarkDown>{msg.content}</ReactMarkDown>
-            </div>
-        ))}
     </div>
     </div>
     );

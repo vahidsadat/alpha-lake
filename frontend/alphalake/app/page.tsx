@@ -16,18 +16,18 @@ export default function Dashboard(){
       <div className="max-w-6xl mx-auto flex flex-col gap-4">
         <h1 className="text-center text-3xl font-bold font-roboto">AlphaLake</h1>
       </div>
-      <div className='grid grid-cols-[250px_1fr] gap-4'>
-        <div >
+      <div className='grid grid-cols-[250px_1fr] h-[calc(100vh-4rem)] gap-4'>
+        <div className="overflow-y-auto">
             <SideBar onSelect={handleSelectConversation}/>
         </div>
-        <div className="grid grid-rows-[2fr_2fr] gap-4">
+        <div className="grid grid-rows-[auto_1fr] h-full min-h-0 gap-4">
           <div>
             <SearchBar
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
             />
           </div>
-          <div>
+          <div className="min-h-0">
             <AIConversation
               session_id={sessionId}
               />

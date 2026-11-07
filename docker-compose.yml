@@ -10,12 +10,16 @@ services:
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"] 
       interval: 10s
       timeout: 5s
       retries: 5
     depends_on:
         ollama:
+          condition: service_healthy
+        ollama-pull:
+          condition: service_completed_successfully
+        postgres:
           condition: service_healthy
   
   frontend:
@@ -25,7 +29,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+        backend:
+          condition: service_healthy
   
   ollama:
     image: ollama/ollama:latest
@@ -49,7 +54,8 @@ services:
   ollama-pull:
     image: ollama/ollama:latest
     depends_on:
-      - ollama
+        ollama:
+          condition: service_healthy
 
     entrypoint: >
       sh -c "
@@ -61,15 +67,23 @@ services:
     volumes:
       - ollama:/root/.ollama
     restart: "no"
-  postgresql:
-    image: postgres
+
+  postgres:
+    image: postgres:17
     container_name: alphalake
     ports:
       - 5434:5432
     environment:
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
-      - POSTGRES_DB="alphalake"
-    
+      - POSTGRES_DB=alphalake
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${PG_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 volumes:
   ollama: {}
+  postgres: {}
