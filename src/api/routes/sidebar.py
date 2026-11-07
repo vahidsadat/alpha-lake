@@ -1,4 +1,4 @@
-from fastapi import APIRouter , WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter
 from src.db.connection import PostgresClient
 from src.db.repositories import ConversationRepository
 from src.db.messages import MessageRepository
