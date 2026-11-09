@@ -200,3 +200,4 @@ Issues and ideas are welcome. <!-- TODO: add CONTRIBUTING.md and label some "goo
 ## Data source
 
 Financial data comes from the [SEC EDGAR Company Facts API](https://www.sec.gov/edgar/sec-api-documentation). Please follow the SEC's fair-access policy and use a descriptive `User-Agent`.
+ 
