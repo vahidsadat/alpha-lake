@@ -67,8 +67,8 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
       DATABRICKS_TOKEN: ${{ secrets.Databricks_token }}
       TF_VAR_ALPHALAKE_ENV: ${{ vars.ALPHALAKE_ENV }}
-      TF_VAR_name: ${{ secrets.SEC_NAME }}
-      TF_VAR_email: ${{ secrets.SEC_EMAIL }}
+      TF_VAR_sec_name: ${{ secrets.SEC_NAME }}
+      TF_VAR_sec_email: ${{ secrets.SEC_EMAIL }}
       TF_VAR_repo_url: ${{ secrets.REPO_URL }}
 
     steps:
