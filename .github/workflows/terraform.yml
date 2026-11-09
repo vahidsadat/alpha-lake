@@ -71,6 +71,7 @@ jobs:
       TF_VAR_notebook: ${{ vars.NOTEBOOK }}
       TF_VAR_task_key: ${{ vars.TASK_KEY }}
       TF_VAR_name: ${{ vars.NAME }}
+      TF_VAR_repo_base_path: ${{ vars.REPO_BASE_PATH }}
 
     steps:
     # Checkout the repository to the GitHub Actions runner

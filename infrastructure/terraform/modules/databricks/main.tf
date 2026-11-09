@@ -1,5 +1,5 @@
 locals {
-  repo_base_path = "/Workspace${data.databricks_current_user.me.home}/alpha-lake"
+  repo_base_path = var.repo_base_path
 }
 resource "databricks_job" "alphalake" {
   name = var.name
@@ -9,7 +9,6 @@ resource "databricks_job" "alphalake" {
   #   timezone_id            = "Europe/Berlin"
   #   pause_status           = "UNPAUSED"
   # }
-
 
   environment {
     environment_key = "default"
@@ -25,7 +24,7 @@ resource "databricks_job" "alphalake" {
   task {
     task_key = "alphalake_pipeline"
     notebook_task {
-      notebook_path = "${local.repo_base_path}/${notebook}"
+      notebook_path = "${local.repo_base_path}/${var.notebook}"
       source        = "WORKSPACE"
       base_parameters = {
         sec_name  = var.sec_name,

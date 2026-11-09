@@ -1,3 +1,7 @@
+variable "repo_base_path" {
+  type = string
+}
+
 variable "name" {
   type = string
 }
