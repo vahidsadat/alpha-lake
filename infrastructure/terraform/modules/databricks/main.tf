@@ -2,7 +2,7 @@ locals {
   repo_base_path = "/Workspace${data.databricks_current_user.me.home}/alpha-lake"
 }
 resource "databricks_job" "alphalake" {
-  name = "AlphaLake Financial Pipeline"
+  name = var.name
 
   # schedule {
   #   quartz_cron_expression = "0 0 7 * * ?"
@@ -10,11 +10,6 @@ resource "databricks_job" "alphalake" {
   #   pause_status           = "UNPAUSED"
   # }
 
-  git_source {
-    url      = var.repo_url
-    provider = "gitHub"
-    branch   = "main"
-  }
 
   environment {
     environment_key = "default"
@@ -30,7 +25,7 @@ resource "databricks_job" "alphalake" {
   task {
     task_key = "alphalake_pipeline"
     notebook_task {
-      notebook_path = "${local.repo_base_path}/AlphaLakeFinancialPipeline"
+      notebook_path = "${local.repo_base_path}/${notebook}"
       source        = "WORKSPACE"
       base_parameters = {
         sec_name  = var.sec_name,

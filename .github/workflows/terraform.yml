@@ -66,10 +66,11 @@ jobs:
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
       DATABRICKS_TOKEN: ${{ secrets.Databricks_token }}
-      TF_VAR_ALPHALAKE_ENV: ${{ vars.ALPHALAKE_ENV }}
       TF_VAR_sec_name: ${{ secrets.SEC_NAME }}
       TF_VAR_sec_email: ${{ secrets.SEC_EMAIL }}
-      TF_VAR_repo_url: ${{ secrets.REPO_URL }}
+      TF_VAR_notebook: ${{ vars.NOTEBOOK }}
+      TF_VAR_task_key: ${{ vars.TASK_KEY }}
+      TF_VAR_name: ${{ vars.NAME }}
 
     steps:
     # Checkout the repository to the GitHub Actions runner

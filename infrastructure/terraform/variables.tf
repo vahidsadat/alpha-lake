@@ -1,6 +1,13 @@
-variable "ALPHALAKE_ENV" {
-  type    = string
-  default = "databricks"
+variable "name" {
+  type = string
+}
+
+variable "notebook" {
+  type = string
+}
+
+variable "task_key" {
+  type = string
 }
 
 variable "sec_name" {
@@ -10,8 +17,4 @@ variable "sec_name" {
 variable "sec_email" {
   type      = string
   sensitive = true
-}
-
-variable "repo_url" {
-  type = string
 }
