@@ -14,7 +14,7 @@ def run_gold(silver_df: DataFrame, destination: str):
     gold_df = fundamental_df.join(
         cash_flow_df, ["ticker","period_date"], "left"
     )
-    fiscal_year_map_df = (silver_df)
+    fiscal_year_map_df = fiscal_year_map(silver_df)
     gold_df = gold_df.join(
             fiscal_year_map_df, ["ticker","period_date"], "left"
         )
