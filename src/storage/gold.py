@@ -125,5 +125,5 @@ def  fiscal_year_map(df: DataFrame):
     return(
         first_seen.join(ticker_offset,"ticker")
         .withColumn("fiscal_year", F.year("period_end_date") - F.col("ticker_offset"))
-        .select("ticker",F.col("period_end_date"),"fiscal_year")
+        .select("ticker",F.col("period_end_date").alias("period_date"),"fiscal_year")
         )
