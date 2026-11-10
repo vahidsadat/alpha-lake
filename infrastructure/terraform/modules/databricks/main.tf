@@ -1,6 +1,3 @@
-locals {
-  repo_base_path = var.repo_base_path
-}
 resource "databricks_job" "alphalake" {
   name = var.name
 
@@ -20,15 +17,21 @@ resource "databricks_job" "alphalake" {
       ]
     }
   }
+  git_source {
+    url = var.git_url
+    provider = "gitHub"
+    branch = var.git_branch
+  }
 
   task {
-    task_key = "alphalake_pipeline"
+    task_key = var.task_key
     notebook_task {
-      notebook_path = "${local.repo_base_path}/${var.notebook}"
-      source        = "WORKSPACE"
+      notebook_path = var.notebook
+      source        = "GIT"
       base_parameters = {
         sec_name  = var.sec_name,
         sec_email = var.sec_email
+        ticker = var.ticker
       }
     }
   }

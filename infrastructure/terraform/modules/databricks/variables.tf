@@ -1,4 +1,10 @@
-variable "repo_base_path" {
+
+
+variable "git_url" {
+  type = string
+}
+
+variable "git_branch" {
   type = string
 }
 
@@ -21,4 +27,8 @@ variable "sec_name" {
 variable "sec_email" {
   type      = string
   sensitive = true
+}
+
+variable "ticker" {
+  type = string
 }
