@@ -1,20 +1,21 @@
 from .tools.registry import TOOLS
 from .tools.executor import execute_tool
 from .client import create_llm_client
-from .prompts import TITLE_PROMPT
+from .prompts import TITLE_PROMPT, SYSTEM_PROMPT
 import json
 
 client = create_llm_client()
 
 
-
+def _with_system(messages:list[dict]) -> list[dict]:
+    return [{"role": "system", "content": SYSTEM_PROMPT}, *messages]
 def process_message(input_prompt:str, messages: list[dict]):
     
 
     messages.append({"role": "user", "content": input_prompt})
     analysis = client.chat.completions.create(
         model = "qwen3:4b-instruct",
-        messages = messages,
+        messages = _with_system(messages),
         tools = TOOLS,
         tool_choice="auto",
         temperature = 0
@@ -34,7 +35,7 @@ def process_message(input_prompt:str, messages: list[dict]):
             messages.append(tool_result)
         final_response = client.chat.completions.create(
             model="qwen3:4b-instruct",
-            messages=messages,
+            messages=_with_system(messages),
             temperature=0
         )
         

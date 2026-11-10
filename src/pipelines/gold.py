@@ -4,7 +4,7 @@ from ..transformations.gold.cash_flow import annual_cash_flow_metrics
 from ..transformations.gold.cash_flow_quality import cash_flow_quality
 from ..transformations.gold.growth import annual_growth_metrics
 from ..transformations.gold.rolling import rolling_metrics
-from ..storage.gold import write_company_financials , write_cash_flow_quality_metrics, write_growth_metrics, write_rolling_metrics
+from ..storage.gold import write_company_financials , write_cash_flow_quality_metrics, write_growth_metrics, write_rolling_metrics, fiscal_year_map
 from ..quality.gold import validate_gold
 
 def run_gold(silver_df: DataFrame, destination: str):
@@ -14,6 +14,10 @@ def run_gold(silver_df: DataFrame, destination: str):
     gold_df = fundamental_df.join(
         cash_flow_df, ["ticker","period_date"], "left"
     )
+    fiscal_year_map_df = (silver_df)
+    gold_df = gold_df.join(
+            fiscal_year_map_df, ["ticker","period_date"], "left"
+        )
     validate_gold(gold_df)
     print("Gold data quality checks passed.")
     write_company_financials(gold_df, destination)

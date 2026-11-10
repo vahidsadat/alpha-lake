@@ -37,20 +37,6 @@ messages.create_table()
 # for session_id in list_of_session_ids:
 #     conversation.add_title_to_conversations(session_id, generate_title(messages.get_messages(session_id)))
 
-@router.post("/v1/chat", response_model=ChatResponse)
-async def chat_process_message(request:ChatRequest):
-    
-    history = messages.get_messages(request.session_id)
-    title = generate_title(history)
-    conversation.create_if_missing(request.session_id, title)
-    answer =  process_message(request.message, history)
-    if not answer:
-        raise HTTPException(status_code=503, detail="AI Assisstant unavailable")
-    messages.add_messages(request.session_id,history)
-
-
-    return ChatResponse(answer=answer)
-
 @router.websocket("/v1/ws/chat")
 async def websocket_chat(websocket: WebSocket):
     await websocket.accept()

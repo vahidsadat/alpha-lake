@@ -1,5 +1,6 @@
 from pathlib import Path
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, functions as F
+from pyspark.sql.window import Window
 from .path import STORAGE_PATH
 
 def _write_derived_gold_metrics(df: DataFrame, table_name: str, destination: str):
@@ -100,3 +101,29 @@ def write_company_financials(df: DataFrame, destination: str):
     else:
         raise ValueError(f"Unknown destination: {destination}")
 
+
+def  fiscal_year_map(df: DataFrame):
+    annual_days = F.date_diff(F.col("period_end_date"), F.col("perioad_start_date"))
+    first_seen = (
+        df
+        .filter(F.col("filling_form").isin(["10-K","10-K/A","10-KT"]))
+        .filter(F.col("filscal_period") == "FY")
+        .filter(annual_days.between(350, 380))
+        .groupBy("ticker","period_end_date")
+        .agg(F.col("fiscal_year").alias("fiscal_year_raw"))
+        .withColumn("offset", F.col("period_end_date") - F.col("fiscal_year_raw"))
+    )
+
+    counts = first_seen.filter(F.col("offset").isin([0,1])).groupBy("ticker","offset").count()
+    window = Window.partitionBy("ticker").orderBy(F.col("count").desc(), F.col("offset"))
+    ticker_offset = (
+        counts.withColumn("row_number", F.row_number().over(window))
+        .filter(F.col("row_number") == 1)
+        .select("ticker", F.col("offset").alias("ticker_offset"))
+        
+    )
+    return(
+        first_seen.join(ticker_offset,"ticker")
+        .withColumn("fiscal_year", F.year("period_end_date") - F.col("ticker_offset"))
+        .select("ticker",F.col("period_end_date"),"fiscal_year")
+        )
