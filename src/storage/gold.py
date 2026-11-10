@@ -103,7 +103,7 @@ def write_company_financials(df: DataFrame, destination: str):
 
 
 def  fiscal_year_map(df: DataFrame):
-    annual_days = F.date_diff(F.col("period_end_date"), F.col("perioad_start_date"))
+    annual_days = F.date_diff(F.col("period_end_date"), F.col("period_start_date"))
     first_seen = (
         df
         .filter(F.col("filing_form").isin(["10-K","10-K/A","10-KT"]))
