@@ -107,7 +107,7 @@ def  fiscal_year_map(df: DataFrame):
     first_seen = (
         df
         .filter(F.col("filing_form").isin(["10-K","10-K/A","10-KT"]))
-        .filter(F.col("filscal_period") == "FY")
+        .filter(F.col("fiscal_period") == "FY")
         .filter(annual_days.between(350, 380))
         .groupBy("ticker","period_end_date")
         .agg(F.col("fiscal_year").alias("fiscal_year_raw"))
