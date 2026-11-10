@@ -110,8 +110,8 @@ def  fiscal_year_map(df: DataFrame):
         .filter(F.col("fiscal_period") == "FY")
         .filter(annual_days.between(350, 380))
         .groupBy("ticker","period_end_date")
-        .agg(F.col("fiscal_year").alias("fiscal_year_raw"))
-        .withColumn("offset", F.col("period_end_date") - F.col("fiscal_year_raw"))
+        .agg(F.min("fiscal_year").alias("fiscal_year_raw"))
+        .withColumn("offset", F.year("period_end_date") - F.col("fiscal_year_raw"))
     )
 
     counts = first_seen.filter(F.col("offset").isin([0,1])).groupBy("ticker","offset").count()
