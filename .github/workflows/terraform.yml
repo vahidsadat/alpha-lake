@@ -96,7 +96,7 @@ jobs:
       run: terraform fmt -check
     - name: Check variables
       run: |
-        for v in TF_VAR_notebook TF_VAR_task_key TF_VAR_name TF_VAR_tickers TF_VAR_git_url TF_VAR_git_branch TF_VAR_sec_name; do
+        for v in TF_VAR_sec_name TF_VAR_pg_user TF_VAR_pg_password TF_VAR_pg_host; do
           if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set"; fi
         done
     # Generates an execution plan for Terraform
