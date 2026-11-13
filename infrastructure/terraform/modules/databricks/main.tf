@@ -13,7 +13,10 @@ resource "databricks_job" "alphalake" {
     spec {
       environment_version = "6"
       dependencies = [
-        "edgartools", "sqlalchemy", "python-dotenv", "psycopg2-binary"
+        "edgartools",
+         "sqlalchemy", 
+         "python-dotenv", 
+         "psycopg2-binary"
       ]
     }
   }
@@ -25,6 +28,7 @@ resource "databricks_job" "alphalake" {
 
   task {
     task_key = var.task_key
+    environment_key = "default"
     notebook_task {
       notebook_path = var.notebook
       source        = "GIT"
