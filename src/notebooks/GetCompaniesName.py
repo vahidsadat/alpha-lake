@@ -1,12 +1,15 @@
 # Databricks notebook source
 import requests
+import os
 from src.db.connection import PostgresClient
 from src.db.companies import CompanyRepository
 from databricks.sdk.runtime import dbutils
 
 dbutils.widgets.text("sec_name", "")
 dbutils.widgets.text("sec_email", "")
-
+os.environ["PG_USER"]     = dbutils.secrets.get("alphalake", "pg_user")
+os.environ["PG_PASSWORD"] = dbutils.secrets.get("alphalake", "pg_password")
+os.environ["PG_HOST"]     = dbutils.secrets.get("alphalake", "pg_host")
 client = PostgresClient()
 company = CompanyRepository(client=client)
 
