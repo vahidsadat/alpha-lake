@@ -13,7 +13,7 @@ resource "databricks_job" "alphalake" {
     spec {
       environment_version = "6"
       dependencies = [
-        "edgartools"
+        "edgartools", "sqlalchemy", "python-dotenv", "psycopg2-binary"
       ]
     }
   }
