@@ -70,9 +70,9 @@ jobs:
       TF_VAR_sec_email: ${{ secrets.SEC_EMAIL }}
       TF_VAR_git_branch: ${{ vars.GIT_BRANCH }}
       TF_VAR_git_url: ${{ vars.GIT_URL }}
-      PG_USER: ${{ secrets.PG_USER}}
-      PG_PASSWORD: ${{ secrets.PG_PASSWORD}}
-      PG_HOST: ${{ secrets.PG_HOST}}
+      TF_VAR_pg_user:     ${{ secrets.PG_USER }}
+      TF_VAR_pg_password: ${{ secrets.PG_PASSWORD }}
+      TF_VAR_pg_host:     ${{ secrets.PG_HOST }}
       PG_PORT: ${{ secrets.PG_PORT}}
       PG_DB: ${{ secrets.PG_DB}}
 
