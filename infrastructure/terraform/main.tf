@@ -15,6 +15,9 @@ module "company_sync" {
   source     = "./modules/databricks"
   sec_name   = var.sec_name
   sec_email  = var.sec_email
+  pg_user = var.pg_user
+  pg_password = var.pg_password
+  pg_host = var.pg_host
   notebook   = "src/notebooks/GetCompaniesName"
   task_key   = "alphalake_get_company_info"
   name       = "AlphaLake Get Companies Name"

@@ -38,3 +38,23 @@ variable "ticker" {
 variable "schedule" {
   type = string
 }
+
+
+variable "pg_user" {
+  type = string
+  default = null
+  nullable = true
+}
+
+variable "pg_password" {
+  type      = string
+  sensitive = true
+  default = null
+  nullable = true
+}
+
+variable "pg_host" {
+  type = string
+  default = null
+  nullable = true
+}

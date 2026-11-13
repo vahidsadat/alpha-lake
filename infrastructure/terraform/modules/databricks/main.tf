@@ -35,6 +35,9 @@ resource "databricks_job" "alphalake" {
       base_parameters = {
         sec_name  = var.sec_name,
         sec_email = var.sec_email
+        PG_USER = var.pg_user
+        PG_PASSWORD = var.pg_password
+        PG_HOST = var.pg_host
         ticker = var.ticker
       }
     }

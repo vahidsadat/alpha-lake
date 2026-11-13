@@ -15,7 +15,7 @@ class CompanyRepository:
                     """
                     CREATE TABLE IF NOT EXISTS alphalake.companies
                     (
-                        CIK BIGSERIAL PRIMARY KEY,
+                        CIK BIGINT PRIMARY KEY,
                         ticker VARCHAR NOT NULL ,
                         company VARCHAR NOT NULL,
                         exchange VARCHAR NOT NULL,
@@ -76,7 +76,7 @@ class CompanyRepository:
                 "ticker": c[2],
                 "exchange": c[3]
             }
-            for c in companies if isinstance(c,dict)
+            for c in companies if isinstance(c,(list,dict))
             ]
             with self.client.engine.begin() as connection:
                 connection.execute(text(insert_query), rows)
