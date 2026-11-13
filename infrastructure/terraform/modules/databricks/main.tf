@@ -16,7 +16,7 @@ resource "databricks_job" "alphalake" {
         "edgartools",
          "sqlalchemy", 
          "python-dotenv", 
-         "psycopg2-binary"
+         "pg8000"
       ]
     }
   }

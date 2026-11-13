@@ -18,7 +18,7 @@ class PostgresClient:
             raise ValueError("PG_USER and PG_PASSWORD must be defined in your .env file")
 
         url = URL.create(
-            "postgresql+psycopg2",
+            "postgresql+pg8000",
             username = user,
             password= password,
             host= os.getenv("PG_HOST","127.0.0.1"),
