@@ -33,12 +33,12 @@ resource "databricks_job" "alphalake" {
       notebook_path = var.notebook
       source        = "GIT"
       base_parameters = {
-        sec_name  = var.sec_name,
-        sec_email = var.sec_email
-        PG_USER = var.pg_user
-        PG_PASSWORD = var.pg_password
-        PG_HOST = var.pg_host
-        ticker = var.ticker
+        sec_name    = var.sec_name
+        sec_email   = var.sec_email
+        pg_user     = var.pg_user
+        pg_password = var.pg_password
+        pg_host     = var.pg_host
+        ticker      = var.ticker
       }
     }
   }

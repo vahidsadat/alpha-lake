@@ -5,13 +5,12 @@ from src.db.connection import PostgresClient
 from src.db.companies import CompanyRepository
 from databricks.sdk.runtime import dbutils
 
-dbutils.widgets.text("sec_name", "")
-dbutils.widgets.text("sec_email", "")
-for key in ["pg_user", "pg_password", "pg_host"]:
-       dbutils.widgets.text(key, "")
-os.environ["PG_USER"]     = dbutils.secrets.get("pg_user")
-os.environ["PG_PASSWORD"] = dbutils.secrets.get("pg_password")
-os.environ["PG_HOST"]     = dbutils.secrets.get("pg_host")
+for key in ["sec_name", "sec_email", "pg_user", "pg_password", "pg_host"]:
+    dbutils.widgets.text(key, "")
+
+os.environ["PG_USER"]     = dbutils.widgets.get("pg_user")
+os.environ["PG_PASSWORD"] = dbutils.widgets.get("pg_password")
+os.environ["PG_HOST"]     = dbutils.widgets.get("pg_host")
 client = PostgresClient()
 company = CompanyRepository(client=client)
 
