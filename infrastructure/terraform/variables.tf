@@ -31,3 +31,8 @@ variable "sec_email" {
 variable "ticker" {
   type = string
 }
+
+
+variable "schedule" {
+  type = string
+}

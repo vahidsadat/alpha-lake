@@ -1,11 +1,11 @@
 resource "databricks_job" "alphalake" {
   name = var.name
 
-  # schedule {
-  #   quartz_cron_expression = "0 0 7 * * ?"
-  #   timezone_id            = "Europe/Berlin"
-  #   pause_status           = "UNPAUSED"
-  # }
+  schedule {
+    quartz_cron_expression = var.schedule
+    timezone_id            = "Europe/Berlin"
+    pause_status           = "UNPAUSED"
+  }
 
   environment {
     environment_key = "default"

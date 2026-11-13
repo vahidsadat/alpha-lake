@@ -68,12 +68,13 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.Databricks_token }}
       TF_VAR_sec_name: ${{ secrets.SEC_NAME }}
       TF_VAR_sec_email: ${{ secrets.SEC_EMAIL }}
-      TF_VAR_notebook: ${{ vars.NOTEBOOK }}
-      TF_VAR_task_key: ${{ vars.TASK_KEY }}
-      TF_VAR_name: ${{ vars.NAME }}
-      TF_VAR_ticker: ${{ vars.TICKER }}
       TF_VAR_git_branch: ${{ vars.GIT_BRANCH }}
       TF_VAR_git_url: ${{ vars.GIT_URL }}
+      PG_USER: ${{ secrets.PG_USER}}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD}}
+      PG_HOST: ${{ secrets.PG_HOST}}
+      PG_PORT: ${{ secrets.PG_PORT}}
+      PG_DB: ${{ secrets.PG_DB}}
 
     steps:
     # Checkout the repository to the GitHub Actions runner
