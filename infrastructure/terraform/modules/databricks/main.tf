@@ -14,9 +14,6 @@ resource "databricks_job" "alphalake" {
       environment_version = "6"
       dependencies = [
         "edgartools",
-         "sqlalchemy", 
-         "python-dotenv", 
-         "pg8000"
       ]
     }
   }
@@ -35,9 +32,6 @@ resource "databricks_job" "alphalake" {
       base_parameters = {
         sec_name    = var.sec_name
         sec_email   = var.sec_email
-        pg_user     = var.pg_user
-        pg_password = var.pg_password
-        pg_host     = var.pg_host
         ticker      = var.ticker
       }
     }
