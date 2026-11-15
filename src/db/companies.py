@@ -39,7 +39,7 @@ class CompanyRepository:
                             DO UPDATE SET
                                 company = EXCLUDED.company,
                                 exchange = EXCLUDED.exchange,
-                                updated_at = NOW();
+                                updated_at = NOW()
                             WHERE
                                 alphalake.companies.company IS DISTINCT FROM EXCLUDED.company
                                 OR
@@ -85,7 +85,7 @@ class CompanyRepository:
                                 DO UPDATE SET
                                     company = EXCLUDED.company,
                                     exchange = EXCLUDED.exchange,
-                                    updated_at = NOW();
+                                    updated_at = NOW()
                                 WHERE
                                     alphalake.companies.company IS DISTINCT FROM EXCLUDED.company
                                     OR
