@@ -34,11 +34,7 @@ class CompanyRepository:
         insert_query = """
                             INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                             VALUES (:CIK, :ticker, :company, :exchange, now())
-                            ON CONFLICT (CIK, ticker)
-                            DO UPDATE SET
-                                company = EXCLUDED.company,
-                                exchange = EXCLUDED.exchange,
-                                updated_at = NOW();
+                            ON CONFLICT (CIK) DO NOTHING;
                             """
         parameters = {"CIK": CIK, "ticker" : ticker, "company" : company, "exchange" : exchange}
         with self.client.engine.begin() as connection:
@@ -75,11 +71,7 @@ class CompanyRepository:
             insert_query = """
                                 INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                                 VALUES (:CIK, :ticker, :company, :exchange, now())
-                                ON CONFLICT (CIK, ticker)
-                                DO UPDATE SET
-                                    company = EXCLUDED.company,
-                                    exchange = EXCLUDED.exchange,
-                                    updated_at = NOW();
+                                ON CONFLICT (CIK) DO NOTHING;
                                 """
             
             rows = [
