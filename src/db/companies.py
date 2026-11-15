@@ -1,6 +1,12 @@
 from .connection import PostgresClient
 from sqlalchemy import text
+import logging
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
 
 class CompanyRepository:
 
@@ -28,7 +34,11 @@ class CompanyRepository:
         insert_query = """
                             INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                             VALUES (:CIK, :ticker, :company, :exchange, now())
-                            ON CONFLICT (CIK) DO NOTHING;
+                            ON CONFLICT (CIK, ticker)
+                            DO UPDATE SET
+                                company = EXCLUDED.company,
+                                exchange = EXCLUDED.exchange,
+                                updated_at = NOW();
                             """
         parameters = {"CIK": CIK, "ticker" : ticker, "company" : company, "exchange" : exchange}
         with self.client.engine.begin() as connection:
@@ -65,7 +75,11 @@ class CompanyRepository:
             insert_query = """
                                 INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                                 VALUES (:CIK, :ticker, :company, :exchange, now())
-                                ON CONFLICT (CIK) DO NOTHING;
+                                ON CONFLICT (CIK, ticker)
+                                DO UPDATE SET
+                                    company = EXCLUDED.company,
+                                    exchange = EXCLUDED.exchange,
+                                    updated_at = NOW();
                                 """
             
             rows = [
@@ -77,5 +91,17 @@ class CompanyRepository:
             }
             for c in companies if isinstance(c,(list,dict))
             ]
+            logger.info("Received %d companies for synchronization", len(rows))
+            if not rows:
+                logger.warning("No companies to insert")
+                return
             with self.client.engine.begin() as connection:
-                connection.execute(text(insert_query), rows)
+                result= connection.execute(text(insert_query), rows)
+                inserted = result.rowcount
+                logger.info(
+                    "Company synchronization completed: "
+                    "received=%d, inserted=%d, skipped=%d",
+                    len(rows),
+                    inserted,
+                    len(rows) - inserted
+        )
