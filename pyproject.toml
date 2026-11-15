@@ -22,13 +22,6 @@ dependencies = [
 ]
 
 
-[dependency-groups]
-ingestion = [
-    "sqlalchemy",
-    "psycopg2-binary",
-    "python-dotenv",
-    "requests",
-]
 
 [dependency-groups]
 dev = [
@@ -38,6 +31,12 @@ dev = [
     "pytest>=8.0.0",
 ]
 
+ingestion = [
+    "sqlalchemy",
+    "psycopg2-binary",
+    "python-dotenv",
+    "requests",
+]
 [tool.ruff]
 target-version = "py311"
 line-length = 88
