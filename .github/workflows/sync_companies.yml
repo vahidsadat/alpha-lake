@@ -33,5 +33,5 @@ jobs:
           PG_PORT: ${{ secrets.PG_PORT }}
           PG_DB: ${{ secrets.PG_DB }}
         run: |
-          uv run --only-group ingestion --frozen python src/scripts/GetCompaniesName.py
+          uv run --only-group ingestion --frozen python -m src.scripts.GetCompaniesName
           
