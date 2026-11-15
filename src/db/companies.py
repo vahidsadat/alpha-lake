@@ -20,12 +20,12 @@ class CompanyRepository:
                     """
                     CREATE TABLE IF NOT EXISTS alphalake.companies
                     (
-                        CIK BIGINT PRIMARY KEY,
+                        CIK BIGINT,
                         ticker VARCHAR NOT NULL ,
                         company VARCHAR NOT NULL,
                         exchange VARCHAR,
                         updated_at TIMESTAMPTZ DEFAULT Now(),
-                        UNIQUE(CIK, ticker)
+                         PRIMARY KEY(CIK, ticker)
                     )
                     """
                 )
@@ -59,7 +59,7 @@ class CompanyRepository:
             """
             parameters = {"company_name" : company_name}
             with self.client.engine.connect() as connection:
-                result = connection.execute(text(select_query),parameters).mappings()
+                result = connection.execute(text(select_query),parameters).mappings().all()
             return result
 
     def get_companies(self):
@@ -72,9 +72,7 @@ class CompanyRepository:
         with self.client.engine.connect() as connection:
             result = connection.execute(text(select_query)).mappings().all()
             for row in result:
-                conversation.append({"CIK":row["CIK"],
-                                    "title":row["title"],
-                                    "updated_at":row["updated_at"]})
+                conversation.append({"cik": row["cik"], "company": row["company"], "updated_at": row["updated_at"]})
         return conversation
 
     def add_companies(self, companies: list[dict]):
