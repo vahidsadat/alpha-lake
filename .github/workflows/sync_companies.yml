@@ -1,0 +1,37 @@
+name: 'Sync SEC Companies'
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+      timezone: "Europe/berlin"
+  workflow_dispatch: 
+
+permissions: 
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          uv sync --only-group ingestion --frozen
+      - name: Sync SEC Companies
+        env: 
+          SEC_NAME: ${{ secrets.SEC_NAME }}
+          SEC_EMAIL: ${{ secrets.SEC_EMAIL }}
+          PG_USER: ${{ secrets.PG_USER }}
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          PG_HOST: ${{ secrets.PG_HOST }}
+          PG_PORT: ${{ secrets.PG_PORT }}
+          PG_DB: ${{ secrets.PG_DB }}
+        run: |
+          uv run --only-group ingestion --frozen python src/notebooks/GetCompaniesName.py
+          
