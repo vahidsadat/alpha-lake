@@ -3,7 +3,7 @@ name: 'Sync SEC Companies'
 on:
   schedule:
     - cron: "0 0 1 * *"
-      timezone: "Europe/berlin"
+      timezone: "Europe/Berlin"
   workflow_dispatch: 
 
 permissions: 
