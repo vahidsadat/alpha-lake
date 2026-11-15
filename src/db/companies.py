@@ -17,7 +17,7 @@ class CompanyRepository:
                         CIK BIGINT PRIMARY KEY,
                         ticker VARCHAR NOT NULL ,
                         company VARCHAR NOT NULL,
-                        exchange VARCHAR NOT NULL,
+                        exchange VARCHAR,
                         updated_at TIMESTAMPTZ DEFAULT Now()
                     )
                     """
