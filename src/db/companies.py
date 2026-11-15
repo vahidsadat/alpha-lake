@@ -24,7 +24,7 @@ class CompanyRepository:
                         ticker VARCHAR NOT NULL ,
                         company VARCHAR NOT NULL,
                         exchange VARCHAR,
-                        updated_at TIMESTAMPTZ DEFAULT Now()
+                        updated_at TIMESTAMPTZ DEFAULT Now(),
                         UNIQUE(CIK, ticker)
                     )
                     """
