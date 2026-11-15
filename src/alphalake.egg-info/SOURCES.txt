@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 src/ai/__init__.py
@@ -18,9 +19,17 @@ src/api/main.py
 src/api/routes/chat.py
 src/api/routes/companies.py
 src/api/routes/health.py
+src/api/routes/search.py
+src/api/routes/sidebar.py
+src/db/companies.py
+src/db/connection.py
+src/db/messages.py
+src/db/repositories.py
+src/db/schemas.py
 src/ingestion/sec/__init__.py
 src/ingestion/sec/client.py
 src/ingestion/sec/ticker.py
+src/notebooks/AlphaLakeFinancialPipeline.py
 src/pipelines/__init__.py
 src/pipelines/bronze.py
 src/pipelines/gold.py
@@ -31,6 +40,7 @@ src/quality/gold.py
 src/quality/quality.py
 src/runtime/__init__.py
 src/runtime/session.py
+src/scripts/GetCompaniesName.py
 src/storage/bronze.py
 src/storage/gold.py
 src/storage/iceberg.py

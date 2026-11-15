@@ -3,6 +3,7 @@ Name: alphalake
 Version: 0.0.0
 Author-email: vahid sadat <sadatvahid1372@gmail.com>
 Requires-Python: >=3.10
+License-File: LICENSE
 Requires-Dist: edgartools
 Requires-Dist: python-dotenv
 Requires-Dist: requests
@@ -15,3 +16,7 @@ Requires-Dist: fastapi
 Requires-Dist: uvicorn
 Requires-Dist: websockets
 Requires-Dist: fastapi[standard]
+Requires-Dist: websocket-client
+Requires-Dist: sqlalchemy
+Requires-Dist: psycopg2-binary
+Dynamic: license-file

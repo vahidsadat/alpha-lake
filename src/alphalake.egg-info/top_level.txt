@@ -1,8 +1,11 @@
 ai
 api
+db
 ingestion
+notebooks
 pipelines
 quality
 runtime
+scripts
 storage
 transformations

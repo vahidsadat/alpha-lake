@@ -10,3 +10,6 @@ fastapi
 uvicorn
 websockets
 fastapi[standard]
+websocket-client
+sqlalchemy
+psycopg2-binary
