@@ -1,4 +1,3 @@
-# Databricks notebook source
 import requests
 import os
 from src.db.connection import PostgresClient
@@ -9,7 +8,8 @@ print("creating client...")
 client = PostgresClient()
 print("connected")
 company = CompanyRepository(client=client)
-
+name = os.getenv("SEC_NAME")
+email = os.getenv("SEC_EMAIL")
 def get_companies():
     HEADERS = {
         "User-Agent": f"{name} {email}",

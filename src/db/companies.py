@@ -1,6 +1,5 @@
 from .connection import PostgresClient
 from sqlalchemy import text
-import pandas as pd
 
 
 class CompanyRepository:

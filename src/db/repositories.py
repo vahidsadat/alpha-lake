@@ -1,6 +1,5 @@
 from .connection import PostgresClient
 from sqlalchemy import text
-import pandas as pd
 from .schemas import Conversation
 from uuid import UUID
 from .messages import MessageRepository

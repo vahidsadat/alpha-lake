@@ -21,6 +21,15 @@ dependencies = [
     "psycopg2-binary"
 ]
 
+
+[dependency-groups]
+ingestion = [
+    "sqlalchemy",
+    "psycopg2-binary",
+    "python-dotenv",
+    "requests",
+]
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.0",
