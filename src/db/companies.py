@@ -25,6 +25,7 @@ class CompanyRepository:
                         company VARCHAR NOT NULL,
                         exchange VARCHAR,
                         updated_at TIMESTAMPTZ DEFAULT Now()
+                        UNIQUE(CIK, ticker)
                     )
                     """
                 )
@@ -34,7 +35,16 @@ class CompanyRepository:
         insert_query = """
                             INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                             VALUES (:CIK, :ticker, :company, :exchange, now())
-                            ON CONFLICT (CIK) DO NOTHING;
+                            ON CONFLICT (CIK, ticker)
+                            DO UPDATE SET
+                                company = EXCLUDED.company,
+                                exchange = EXCLUDED.exchange,
+                                updated_at = NOW();
+                            WHERE
+                                alphalake.companies.company IS DISTINCT FROM EXCLUDED.company
+                                OR
+                                alphalake.companies.exchange IS DISTINCT FROM EXCLUDED.exchange;
+                                                            
                             """
         parameters = {"CIK": CIK, "ticker" : ticker, "company" : company, "exchange" : exchange}
         with self.client.engine.begin() as connection:
@@ -71,7 +81,15 @@ class CompanyRepository:
             insert_query = """
                                 INSERT INTO alphalake.companies (CIK, ticker,company,exchange, updated_at)
                                 VALUES (:CIK, :ticker, :company, :exchange, now())
-                                ON CONFLICT (CIK) DO NOTHING;
+                                ON CONFLICT (CIK, ticker)
+                                DO UPDATE SET
+                                    company = EXCLUDED.company,
+                                    exchange = EXCLUDED.exchange,
+                                    updated_at = NOW();
+                                WHERE
+                                    alphalake.companies.company IS DISTINCT FROM EXCLUDED.company
+                                    OR
+                                    alphalake.companies.exchange IS DISTINCT FROM EXCLUDED.exchange;
                                 """
             
             rows = [
