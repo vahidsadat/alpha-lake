@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    # services:
-    #   postgres:
-    #     image: postgres:16
-    #     env:
-    #       POSTGRES_USER: ${{ secrets.PG_USER }}
-    #       POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-    #       POSTGRES_DB: alphalake
-    #     ports:
-    #       - 5432:5432
-    #     options: >-
-    #       --health-cmd "pg_isready -U ${{ secrets.PG_USER }}"
-    #       --health-interval 5s
-    #       --health-timeout 5s
-    #       --health-retries 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: alphalake
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.PG_USER }}"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: checkout repository
